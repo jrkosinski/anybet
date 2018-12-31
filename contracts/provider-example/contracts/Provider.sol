@@ -144,6 +144,6 @@ contract Provider is ProviderInterface, Ownable {
     }
 
     function addTestData() public {
-
+        addEvent("will Trump remain president?", DateLib.DateTime(2020, 1, 30, 0, 0, 0, 0, 0).toUnixTimestamp(), "yes|no", 2);
     }
 }
