@@ -1,8 +1,8 @@
 pragma solidity ^0.5.0;
 
-import "./DateLib.sol"
-import "./Ownable.sol"
-import "./OracleInterface.sol"
+import "./DateLib.sol";
+import "./Ownable.sol";
+import "./OracleInterface.sol";
 
 contract Anybet is Ownable {
     Event[] events; 
@@ -24,7 +24,7 @@ contract Anybet is Ownable {
         string name;
         uint date; 
         OracleInterface.EventState state;
-        string memory options;
+        string options;
         uint8 optionCount; 
         uint8 result;
     }
@@ -43,6 +43,8 @@ contract Anybet is Ownable {
         
         bytes32 eventId;
         string memory name;
+        string memory options; 
+        uint8 optionCount; 
         OracleInterface.EventState state;
         uint date;
 
@@ -90,7 +92,7 @@ contract Anybet is Ownable {
         return (0, address(0), 0, "", 0, OracleInterface.EventState.Unknown, "", 0, 0);
     }
 
-    function placeBet(bytes32 _eventId, uint8 result) public payable returns (bool) {                                 
+    function placeBet(bytes32 _eventId, uint8 _result) public payable returns (bool) {                                 
         bool output = false; 
 
         //require that bet amount meets minimum requirement 
@@ -122,9 +124,11 @@ contract Anybet is Ownable {
         //TODO: allow user to increase his bet?
         require(!userHasBet, "user already has a running bet for this event");
 
+        //TODO: ensure that result is within proper range
+
         //place the bet 
         Bet[] storage bets = eventToBets[_eventId]; 
-        bets.push(Bet(msg.sender, _eventId, msg.value, _team))-1; 
+        bets.push(Bet(msg.sender, _eventId, msg.value, _result))-1; 
         userBets.push(_eventId); 
         output = true;
 
