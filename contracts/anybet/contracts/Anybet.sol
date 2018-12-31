@@ -5,7 +5,9 @@ import "./Ownable.sol";
 import "./ProviderInterface.sol";
 
 contract Anybet is Ownable {
-    Event[] events; 
+    Event[] public events; 
+    Event[] public pendingEvents;
+
     mapping(bytes32 => uint) eventIdToIndex; 
     mapping(address => bytes32[]) internal userToBets;
     mapping(bytes32 => Bet[]) internal eventToBets;
@@ -16,7 +18,7 @@ contract Anybet is Ownable {
     //TODO: could be per event ?
     uint internal minimumBetAmount = 1000000000000;
 
-    //defines a event along with its outcome
+    //defines an event along with its outcome
     struct Event {
         bytes32 eventId;
         address providerAddress;
@@ -36,8 +38,9 @@ contract Anybet is Ownable {
         uint8 option;
     }
 
-    function addEvent(address _providerAddress, bytes32 _eventId) public onlyOwner returns (bytes32) {
+    function addEvent(address _providerAddress, bytes32 _eventId) external onlyOwner returns (bytes32) {
         //get event from provider
+        
         ProviderInterface provider = ProviderInterface(_providerAddress);
         bytes32 newId = 0;
         
@@ -67,6 +70,7 @@ contract Anybet is Ownable {
                 0  
             )); 
             eventIdToIndex[newId] = newIndex;
+            pendingEvents.push(events[newIndex]); 
         }
 
         return newId;
@@ -118,22 +122,6 @@ contract Anybet is Ownable {
         return (0, address(0), 0, "", 0, ProviderInterface.EventState.Unknown, "", 0, 0);
     }
 
-    function getProviderEvent(address _providerAddress, bytes32 _eventId) public view returns (
-        bytes32 eventId,
-        address providerAddress,
-        bytes32 providerEventId,
-        string memory name,
-        uint date, 
-        ProviderInterface.EventState state,
-        string memory options, 
-        uint8 optionCount, 
-        uint8 outcome 
-        ) {
-
-        bytes32 localId = keccak256(abi.encodePacked(_providerAddress, _eventId)); 
-        return getEvent(localId);
-    }
-
     function placeBet(bytes32 _eventId, uint8 _outcome) public payable returns (bool) {                                 
         bool output = false; 
 
@@ -147,7 +135,7 @@ contract Anybet is Ownable {
 
         //refresh event from oracle provider
         Event storage evt = events[_getEventIndex(_eventId)]; 
-        _refreshEventFromOracle(evt); 
+        _refreshEventFromProvider(evt); 
 
         //require that event is pending (bettable)
         require(evt.state == ProviderInterface.EventState.Pending, "event is not bettable"); 
@@ -178,10 +166,24 @@ contract Anybet is Ownable {
         return output; 
     }
 
+    function getBetTotals(bytes32 _eventId) public view returns(uint[255] memory) {
+        uint[255] memory output; 
+        uint index = eventIdToIndex[_eventId]; 
+        require(index > 0, "event not found"); 
+
+        Bet[] storage bets = eventToBets[_eventId]; 
+
+        for (uint n = 0; n<bets.length; n++) {
+            output[bets[n].option] += bets[n].amount; 
+        }
+
+        return output; 
+    }
+
 
     // -- PRIVATE METHODS -- 
 
-    function _refreshEventFromOracle(Event storage _event) private returns (bool) {
+    function _refreshEventFromProvider(Event storage _event) private returns (bool) {
         bool output = false; 
 
         //get event from oracle 

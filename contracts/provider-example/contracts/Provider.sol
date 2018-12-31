@@ -69,57 +69,6 @@ contract Provider is ProviderInterface, Ownable {
         return (index > 0); 
     }
 
-    function addEvent(string memory _name, uint _date, string memory _options, uint8 _optionCount) public returns (bytes32) {
-
-        //hash the crucial info to get a unique id 
-        bytes32 id = keccak256(abi.encodePacked(_name, _options, _optionCount, _date)); 
-
-        //require that the match be unique (not already added) 
-        require(!eventExists(id), "duplicate event exists");
-        
-        //add the match 
-        uint newIndex = events.push(Event(id, _name, _date, EventState.Pending, _options, _optionCount, 0))-1; 
-        eventIdToIndex[id] = newIndex+1;
-        
-        //return the unique id of the new match
-        return id;
-    }
-
-    function cancelEvent(bytes32 _eventId) external {
-        require(eventExists(_eventId));
-        uint index = _getEventIndex(_eventId);
-        Event storage evt = events[index]; 
-        require(evt.state == EventState.Pending || evt.state == EventState.Locked, "only pending or locked events may be cancelled"); 
-        evt.state = EventState.Cancelled;
-    }
-
-    function lockEvent(bytes32 _eventId) external {
-        require(eventExists(_eventId)); 
-        uint index = _getEventIndex(_eventId);
-        Event storage evt = events[index]; 
-        require(evt.state == EventState.Pending, "only pending events may be locked"); 
-        evt.state = EventState.Locked;
-    }
-
-    function completeEvent(bytes32 _eventId, uint8 _outcome) external {
-
-        //require that it exists
-        require(eventExists(_eventId), "event not found"); 
-
-        //get the match 
-        uint index = _getEventIndex(_eventId);
-        Event storage evt = events[index]; 
-
-        //make sure that match is pending (outcome not already declared)
-        require(evt.state == EventState.Pending || evt.state == EventState.Locked, "invalid starting state to complete event"); 
-        
-        //set the outcome
-        evt.outcome = _outcome;
-
-        //set the outcome 
-        evt.state = EventState.Completed;
-    }
-
     function getEvent(bytes32 _eventId) public view returns (
         bytes32 eventId,
         string memory name,
@@ -139,6 +88,57 @@ contract Provider is ProviderInterface, Ownable {
         }
     }
 
+    function addEvent(string memory _name, uint _date, string memory _options, uint8 _optionCount) public onlyOwner returns (bytes32) {
+
+        //hash the crucial info to get a unique id 
+        bytes32 id = keccak256(abi.encodePacked(_name, _options, _optionCount, _date)); 
+
+        //require that the match be unique (not already added) 
+        require(!eventExists(id), "duplicate event exists");
+        
+        //add the match 
+        uint newIndex = events.push(Event(id, _name, _date, EventState.Pending, _options, _optionCount, 0))-1; 
+        eventIdToIndex[id] = newIndex+1;
+        
+        //return the unique id of the new match
+        return id;
+    }
+
+    function cancelEvent(bytes32 _eventId) onlyOwner external {
+        require(eventExists(_eventId), "event not found");
+        uint index = _getEventIndex(_eventId);
+        Event storage evt = events[index]; 
+        require(evt.state == EventState.Pending || evt.state == EventState.Locked, "only pending or locked events may be cancelled"); 
+        evt.state = EventState.Cancelled;
+    }
+
+    function lockEvent(bytes32 _eventId) onlyOwner external {
+        require(eventExists(_eventId), "event not found"); 
+        uint index = _getEventIndex(_eventId);
+        Event storage evt = events[index]; 
+        require(evt.state == EventState.Pending, "only pending events may be locked"); 
+        evt.state = EventState.Locked;
+    }
+
+    function completeEvent(bytes32 _eventId, uint8 _outcome) onlyOwner external {
+
+        //require that it exists
+        require(eventExists(_eventId), "event not found"); 
+
+        //get the match 
+        uint index = _getEventIndex(_eventId);
+        Event storage evt = events[index]; 
+
+        //make sure that match is pending (outcome not already declared)
+        require(evt.state == EventState.Pending || evt.state == EventState.Locked, "invalid starting state to complete event"); 
+        
+        //set the outcome
+        evt.outcome = _outcome;
+
+        //set the outcome 
+        evt.state = EventState.Completed;
+    }
+
 
     // -- PRIVATE METHODS --
 
@@ -153,7 +153,7 @@ contract Provider is ProviderInterface, Ownable {
         return true;
     }
 
-    function addTestData() public {
+    function addTestData() public onlyOwner {
         addEvent("will Trump remain president?", DateLib.DateTime(2020, 1, 30, 0, 0, 0, 0, 0).toUnixTimestamp(), "yes|no", 2);
         addEvent("who will win the trubador contest?", DateLib.DateTime(2020, 1, 30, 0, 0, 0, 0, 0).toUnixTimestamp(), "gooki|pookino", 3);
     }
