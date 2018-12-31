@@ -2,7 +2,7 @@ pragma solidity ^0.5.0;
 
 import "./DateLib.sol";
 import "./Ownable.sol";
-import "./OracleInterface.sol";
+import "./ProviderInterface.sol";
 
 contract Anybet is Ownable {
     Event[] events; 
@@ -23,10 +23,10 @@ contract Anybet is Ownable {
         bytes32 providerEventId;
         string name;
         uint date; 
-        OracleInterface.EventState state;
+        ProviderInterface.EventState state;
         string options;
         uint8 optionCount; 
-        uint8 result;
+        uint8 outcome;
     }
 
     struct Bet {
@@ -38,19 +38,19 @@ contract Anybet is Ownable {
 
     function addEvent(address _providerAddress, bytes32 _eventId) public onlyOwner returns (bytes32) {
         //get event from provider
-        OracleInterface provider = OracleInterface(_providerAddress);
+        ProviderInterface provider = ProviderInterface(_providerAddress);
         bytes32 newId = 0;
         
         bytes32 eventId;
         string memory name;
         string memory options; 
         uint8 optionCount; 
-        OracleInterface.EventState state;
+        ProviderInterface.EventState state;
         uint date;
 
         (eventId, name, state, date, options, optionCount,) = provider.getEvent(_eventId);
 
-        if (state == OracleInterface.EventState.Pending) {
+        if (state == ProviderInterface.EventState.Pending) {
             //generate new unique event index 
             newId = keccak256(abi.encodePacked(_providerAddress, _eventId)); 
 
@@ -61,7 +61,7 @@ contract Anybet is Ownable {
                 _eventId,
                 name, 
                 date,
-                OracleInterface.EventState.Pending,
+                ProviderInterface.EventState.Pending,
                 options, 
                 optionCount,
                 0  
@@ -78,21 +78,21 @@ contract Anybet is Ownable {
         bytes32 providerEventId,
         string memory name,
         uint date, 
-        OracleInterface.EventState state,
+        ProviderInterface.EventState state,
         string memory options, 
         uint8 optionCount, 
-        uint8 result 
+        uint8 outcome 
     ) {
         uint index = eventIdToIndex[_eventId]; 
         if (events.length > 0 && index >= 0) {
             Event storage evt = events[index]; 
-            return (evt.eventId, evt.providerAddress, evt.providerEventId, evt.name, evt.date, evt.state, evt.options, evt.optionCount, evt.result); 
+            return (evt.eventId, evt.providerAddress, evt.providerEventId, evt.name, evt.date, evt.state, evt.options, evt.optionCount, evt.outcome); 
         }
         
-        return (0, address(0), 0, "", 0, OracleInterface.EventState.Unknown, "", 0, 0);
+        return (0, address(0), 0, "", 0, ProviderInterface.EventState.Unknown, "", 0, 0);
     }
 
-    function placeBet(bytes32 _eventId, uint8 _result) public payable returns (bool) {                                 
+    function placeBet(bytes32 _eventId, uint8 _outcome) public payable returns (bool) {                                 
         bool output = false; 
 
         //require that bet amount meets minimum requirement 
@@ -108,7 +108,7 @@ contract Anybet is Ownable {
         refreshEventFromOracle(evt); 
 
         //require that event is pending (bettable)
-        require(evt.state == OracleInterface.EventState.Pending, "event is not bettable"); 
+        require(evt.state == ProviderInterface.EventState.Pending, "event is not bettable"); 
 
         //require that user doesn't already have a bet for this event 
         bool userHasBet = false;
@@ -124,11 +124,12 @@ contract Anybet is Ownable {
         //TODO: allow user to increase his bet?
         require(!userHasBet, "user already has a running bet for this event");
 
-        //TODO: ensure that result is within proper range
+        //ensure that outcome is within proper range
+        require(_outcome >= 0 && _outcome < evt.optionCount, "invalid chosen outcome - not within valid range of options");
 
         //place the bet 
         Bet[] storage bets = eventToBets[_eventId]; 
-        bets.push(Bet(msg.sender, _eventId, msg.value, _result))-1; 
+        bets.push(Bet(msg.sender, _eventId, msg.value, _outcome))-1; 
         userBets.push(_eventId); 
         output = true;
 
@@ -142,24 +143,24 @@ contract Anybet is Ownable {
         bool output = false; 
 
         //get event from oracle 
-        OracleInterface provider = OracleInterface(_event.providerAddress);
+        ProviderInterface provider = ProviderInterface(_event.providerAddress);
                 
         bytes32 eventId;
         string memory name;
-        OracleInterface.EventState state;
+        ProviderInterface.EventState state;
         uint date;
         string memory options;
         uint8 optionCount; 
-        uint8 result; 
+        uint8 outcome; 
 
-        (eventId, name, state, date, options, optionCount, result) = provider.getEvent(_event.providerEventId);
+        (eventId, name, state, date, options, optionCount, outcome) = provider.getEvent(_event.providerEventId);
 
         //update the internal record if necessary 
-        if (state != OracleInterface.EventState.Unknown) {
+        if (state != ProviderInterface.EventState.Unknown) {
             if (_event.state != state) 
                 _event.state = state; 
-            if (_event.result != result)
-                _event.result = result;
+            if (_event.outcome != outcome)
+                _event.outcome = outcome;
         }
 
         return output; 
