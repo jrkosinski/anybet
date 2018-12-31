@@ -1,5 +1,5 @@
-var Anybet = artifacts.require("Anybet");
+var Provider = artifacts.require("Provider");
 
 module.exports = function(deployer) {
-  deployer.deploy(Anybet);
+  deployer.deploy(Provider);
 };

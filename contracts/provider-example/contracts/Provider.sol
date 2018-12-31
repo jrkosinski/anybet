@@ -86,7 +86,7 @@ contract Provider is ProviderInterface, Ownable {
     }
 
     function cancelEvent(bytes32 _eventId) external {
-        require(eventExists(_eventId)); 
+        require(eventExists(_eventId));
         uint index = _getEventIndex(_eventId);
         Event storage evt = events[index]; 
         require(evt.state == EventState.Pending || evt.state == EventState.Locked, "only pending or locked events may be cancelled"); 
@@ -127,7 +127,17 @@ contract Provider is ProviderInterface, Ownable {
         uint date, 
         string memory options,
         uint8 optionCount,
-        uint8 outcome);
+        uint8 outcome) {
+        
+        //get the match 
+        if (eventExists(_eventId)) {
+            Event storage evt = events[_getEventIndex(_eventId)];
+            return (evt.eventId, evt.name, evt.state, evt.date, evt.options, evt.optionCount, evt.outcome); 
+        }
+        else {
+            return (0, "", ProviderInterface.EventState.Unknown, 0, "", 0, 0); 
+        }
+    }
 
 
     // -- PRIVATE METHODS --
@@ -145,5 +155,6 @@ contract Provider is ProviderInterface, Ownable {
 
     function addTestData() public {
         addEvent("will Trump remain president?", DateLib.DateTime(2020, 1, 30, 0, 0, 0, 0, 0).toUnixTimestamp(), "yes|no", 2);
+        addEvent("who will win the trubador contest?", DateLib.DateTime(2020, 1, 30, 0, 0, 0, 0, 0).toUnixTimestamp(), "gooki|pookino", 3);
     }
 }

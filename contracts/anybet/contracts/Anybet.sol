@@ -66,10 +66,35 @@ contract Anybet is Ownable {
                 optionCount,
                 0  
             )); 
-            eventIdToIndex[newId] = newIndex+1;
+            eventIdToIndex[newId] = newIndex;
         }
 
         return newId;
+    }
+
+    function getPendingEvents() public view returns (bytes32[] memory) {
+        uint count = 0; 
+
+        //TODO: this might cost alot of gas
+
+        //get count of pending events 
+        for (uint i = 0; i < events.length; i++) {
+            if (events[i].state != ProviderInterface.EventState.Completed && events[i].state != ProviderInterface.EventState.Cancelled) 
+                count++; 
+        }
+
+        //collect up all the pending events
+        bytes32[] memory output = new bytes32[](count); 
+
+        if (count > 0) {
+            uint index = 0;
+            for (uint n = events.length; n > 0; n--) {
+                if (events[n-1].state != ProviderInterface.EventState.Completed && events[n-1].state != ProviderInterface.EventState.Cancelled) 
+                    output[index++] = events[n-1].eventId;
+            }
+        } 
+
+        return output; 
     }
 
     function getEvent(bytes32 _eventId) public view returns (
@@ -84,12 +109,29 @@ contract Anybet is Ownable {
         uint8 outcome 
     ) {
         uint index = eventIdToIndex[_eventId]; 
-        if (events.length > 0 && index >= 0) {
-            Event storage evt = events[index]; 
+        if (events.length > 0 && index > 0) {
+            Event storage evt = events[_getEventIndex(_eventId)]; 
             return (evt.eventId, evt.providerAddress, evt.providerEventId, evt.name, evt.date, evt.state, evt.options, evt.optionCount, evt.outcome); 
+            //return (_eventId, address(0), 0, "", index, ProviderInterface.EventState.Unknown, "", 0, 0);
         }
         
         return (0, address(0), 0, "", 0, ProviderInterface.EventState.Unknown, "", 0, 0);
+    }
+
+    function getProviderEvent(address _providerAddress, bytes32 _eventId) public view returns (
+        bytes32 eventId,
+        address providerAddress,
+        bytes32 providerEventId,
+        string memory name,
+        uint date, 
+        ProviderInterface.EventState state,
+        string memory options, 
+        uint8 optionCount, 
+        uint8 outcome 
+        ) {
+
+        bytes32 localId = keccak256(abi.encodePacked(_providerAddress, _eventId)); 
+        return getEvent(localId);
     }
 
     function placeBet(bytes32 _eventId, uint8 _outcome) public payable returns (bool) {                                 
@@ -101,11 +143,11 @@ contract Anybet is Ownable {
         //require that event exists 
         require(events.length > 0, "no available events"); 
         uint eventIndex = eventIdToIndex[_eventId]; 
-        require(eventIndex >= 0, "event not found"); 
+        require(eventIndex > 0, "event not found"); 
 
         //refresh event from oracle provider
-        Event storage evt = events[eventIndex]; 
-        refreshEventFromOracle(evt); 
+        Event storage evt = events[_getEventIndex(_eventId)]; 
+        _refreshEventFromOracle(evt); 
 
         //require that event is pending (bettable)
         require(evt.state == ProviderInterface.EventState.Pending, "event is not bettable"); 
@@ -139,7 +181,7 @@ contract Anybet is Ownable {
 
     // -- PRIVATE METHODS -- 
 
-    function refreshEventFromOracle(Event storage _event) private returns (bool) {
+    function _refreshEventFromOracle(Event storage _event) private returns (bool) {
         bool output = false; 
 
         //get event from oracle 
@@ -164,5 +206,9 @@ contract Anybet is Ownable {
         }
 
         return output; 
+    }
+
+    function _getEventIndex(bytes32 _eventId) private view returns (uint) {
+        return eventIdToIndex[_eventId]-1; 
     }
 }
