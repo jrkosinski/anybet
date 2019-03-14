@@ -6,5 +6,8 @@ in truffle develop console:
 
 Anybet.deployed().then(inst => { instance = inst })
 
-instance.addEvent("0xDB83D5291CCAce20949a21B5524C93F202E9B1ba", "0xc5b826b61f77dc6dadf00bdfd32f2a017f0d596639725ed61a710fdb525f8c0c")
+instance.addEvent("0xDB83D5291CCAce20949a21B5524C93F202E9B1ba", "0xc5b826b61f77dc6dadf00bdfd32f2a017f0d596639725ed61a710fdb525f8c0c", 0)
 
+instance.getPendingEvents()
+
+instance.getEvent("

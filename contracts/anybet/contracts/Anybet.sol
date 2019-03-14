@@ -85,9 +85,8 @@ contract Anybet is Ownable {
     ) {
         uint index = eventIdToIndex[_eventId]; 
         if (events.length > 0 && index > 0) {
-            Event storage evt = events[_getEventIndex(_eventId)]; 
+            Event storage evt = events[index-1]; 
             return (evt.eventId, evt.providerAddress, evt.providerEventId, evt.name, evt.date, evt.minBetAmt, evt.state, evt.options, evt.optionCount, evt.outcome); 
-            //return (_eventId, address(0), 0, "", index, ProviderInterface.EventState.Unknown, "", 0, 0);
         }
         
         return (0, address(0), 0, "", 0, 0, ProviderInterface.EventState.Unknown, "", 0, 0);
@@ -184,7 +183,7 @@ contract Anybet is Ownable {
             newId = keccak256(abi.encodePacked(_providerAddress, _eventId)); 
 
             //add the event 
-            uint newIndex = events.push(Event(
+            uint newCount = events.push(Event(
                 newId,
                 _providerAddress, 
                 _eventId,
@@ -198,7 +197,7 @@ contract Anybet is Ownable {
                 0
             )); 
 
-            eventIdToIndex[newId] = newIndex+1;
+            eventIdToIndex[newId] = newCount;
         }
 
         return newId;
