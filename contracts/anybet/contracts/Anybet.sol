@@ -4,12 +4,15 @@ import "./DateLib.sol";
 import "./Ownable.sol";
 import "./ProviderInterface.sol";
 
+//TODO: enforce max number of bettable options (100?) 
+
 contract Anybet is Ownable {
     Event[] public events; 
+    Bet[] public bets;
 
     mapping(bytes32 => uint) eventIdToIndex; 
     mapping(address => bytes32[]) internal userToBets;
-    mapping(bytes32 => Bet[]) internal eventToBets;
+    mapping(bytes32 => uint[]) internal eventToBets;
     mapping(bytes32 => Bet) internal betIdToBet; 
     mapping(bytes32 => uint) internal optionIdToBetAmount;
 
@@ -131,9 +134,10 @@ contract Anybet is Ownable {
         require(_outcome >= 0 && _outcome < evt.optionCount, "invalid chosen outcome - not within valid range of options");
 
         //place the bet 
-        Bet[] storage bets = eventToBets[_eventId]; 
+        uint[] storage betIndexes = eventToBets[_eventId]; 
         bytes32 betId = _generateBetId(_eventId, msg.sender); 
-        bets.push(Bet(betId, msg.sender, _eventId, msg.value, _outcome))-1; 
+        uint betIndex = bets.push(Bet(betId, msg.sender, _eventId, msg.value, _outcome))-1; 
+        betIndexes.push(betIndex);
         userBets.push(_eventId); 
         output = true;
 
@@ -147,15 +151,17 @@ contract Anybet is Ownable {
         return output; 
     }
 
+    //one element returned per bettable option (max 255) 
     function getBetTotals(bytes32 _eventId) public view returns(uint[255] memory) {
         uint[255] memory output; 
         uint index = eventIdToIndex[_eventId]; 
         require(index > 0, "event not found"); 
 
-        Bet[] storage bets = eventToBets[_eventId]; 
+        uint[] storage betIndexes = eventToBets[_eventId]; 
 
-        for (uint n = 0; n<bets.length; n++) {
-            output[bets[n].option] += bets[n].amount; 
+        for (uint n = 0; n<betIndexes.length; n++) {
+            uint betIndex = betIndexes[n]; 
+            output[bets[betIndex].option] += bets[betIndex].amount; 
         }
 
         return output; 
@@ -197,7 +203,10 @@ contract Anybet is Ownable {
                 0
             )); 
 
+            //add event to index mapping
             eventIdToIndex[newId] = newCount;
+
+            //add event to bets mapping 
         }
 
         return newId;
