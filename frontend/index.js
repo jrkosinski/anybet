@@ -2,6 +2,9 @@ const web3 = require('web3');
 const await = require('asyncawait/await'); 
 const async = require('asyncawait/async'); 
 const web3js = new web3(new web3.providers.HttpProvider("http://localhost:9545"));
+const express = require('express');
+const favicon = require('serve-favicon');
+const app = express();
 
 const address = '0xDB83D5291CCAce20949a21B5524C93F202E9B1ba'; // '0xEEdCB96C203F1B8016fe0989eD6FDf7DA5d9155F'; 
 
@@ -271,6 +274,44 @@ const abi = [
   }
 ]; 
 
+'use strict'; 
+require('dotenv').config();
+
+function run (){
+    const sendFile = (res, filename) => {
+       res.sendfile('./public' + filename); 
+    };
+
+    const registerGetFile = (filename) => {
+        app.get(filename, (req, res) => { 
+            sendFile(res, filename);
+        });
+    };
+
+    //app.use(favicon('./public/images/favicon.ico'));
+    app.use('/favicon.ico', express.static('./public/images/favicon.ico'));
+
+    app.get('/', (req, res) => { sendFile(res, '/sites.html'); });
+    app.get('/index.html', (req, res) => { sendFile(res, '/sites.html'); });
+    app.get('/favicon.ico', (req, res) => { 
+        console.log('favicon'); 
+        sendFile(res, '/images/icon.svg'); 
+    }); 
+
+    registerGetFile('/index.html');
+    registerGetFile('/providers.html');
+    registerGetFile('/events.html');
+
+    registerGetFile('/js/api.js');
+    registerGetFile('/js/providers.js');
+    registerGetFile('/js/events.js');
+
+    registerGetFile('/css/main.css');
+    
+    const httpPort = 8080; 
+    app.listen(httpPort, () => console.log('evs-admin-console listening on port ' + httpPort));
+}
+
 const test = async(() => {
     const contract = new web3js.eth.Contract(abi, address); 
 
@@ -310,4 +351,6 @@ const test = async(() => {
     
 });
 
-test();
+//test();
+
+run();
