@@ -16,3 +16,4 @@ instance.getBetTotals(...)
 instance.placeBet(, 1) 
 
 instance.getBetTotals(...)
+
