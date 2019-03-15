@@ -1,0 +1,8 @@
+bash recompile.sh
+truffle develop (in this or another terminal window - if already running in another, then no need) 
+migrate 
+
+in truffle develop console: 
+Provider.deployed().then(inst => { instance = inst })
+instance.addTestData()
+instance.getAddress()

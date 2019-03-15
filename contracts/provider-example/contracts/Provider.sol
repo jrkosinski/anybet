@@ -4,6 +4,8 @@ import "./DateLib.sol";
 import "./Ownable.sol";
 import "./ProviderInterface.sol";
 
+//TODO: enforce max number of bettable options (100?) 
+
 contract Provider is ProviderInterface, Ownable {
     Event[] events; 
     mapping(bytes32 => uint) eventIdToIndex; 
@@ -21,6 +23,7 @@ contract Provider is ProviderInterface, Ownable {
 
     using DateLib for DateLib.DateTime;
 
+    //gets a list of ids of all events which are in state Pending
     function getPendingEvents() public view returns (bytes32[] memory) {
         uint count = 0; 
 
@@ -46,6 +49,7 @@ contract Provider is ProviderInterface, Ownable {
         return output; 
     }
 
+    //gets a list of ids of all events, pending or not
     function getAllEvents() public view returns (bytes32[] memory) {
         bytes32[] memory output = new bytes32[](events.length); 
 
@@ -62,6 +66,7 @@ contract Provider is ProviderInterface, Ownable {
         return output; 
     }
 
+    //returns true if the given event id is valid and corresponds to an event
     function eventExists(bytes32 _eventId) public view returns (bool) {
         if (events.length == 0)
             return false;
@@ -69,6 +74,7 @@ contract Provider is ProviderInterface, Ownable {
         return (index > 0); 
     }
 
+    //gets the event details for the given event id 
     function getEvent(bytes32 _eventId) public view returns (
         bytes32 eventId,
         string memory name,
@@ -88,6 +94,7 @@ contract Provider is ProviderInterface, Ownable {
         }
     }
 
+    //adds a new event into the system 
     function addEvent(string memory _name, uint _date, string memory _options, uint8 _optionCount) public onlyOwner returns (bytes32) {
 
         //hash the crucial info to get a unique id 
@@ -104,6 +111,7 @@ contract Provider is ProviderInterface, Ownable {
         return id;
     }
 
+    //cancels an event 
     function cancelEvent(bytes32 _eventId) onlyOwner external {
         require(eventExists(_eventId), "event not found");
         uint index = _getEventIndex(_eventId);
@@ -112,6 +120,7 @@ contract Provider is ProviderInterface, Ownable {
         evt.state = EventState.Cancelled;
     }
 
+    //locks an event - no more bets can be placed 
     function lockEvent(bytes32 _eventId) onlyOwner external {
         require(eventExists(_eventId), "event not found"); 
         uint index = _getEventIndex(_eventId);
@@ -120,6 +129,7 @@ contract Provider is ProviderInterface, Ownable {
         evt.state = EventState.Locked;
     }
 
+    //declares the outcome of an event and sets its state to Completed 
     function completeEvent(bytes32 _eventId, uint8 _outcome) onlyOwner external {
 
         //require that it exists
@@ -156,5 +166,9 @@ contract Provider is ProviderInterface, Ownable {
     function addTestData() public onlyOwner {
         addEvent("will Trump remain president?", DateLib.DateTime(2020, 1, 30, 0, 0, 0, 0, 0).toUnixTimestamp(), "yes|no", 2);
         addEvent("who will win the trubador contest?", DateLib.DateTime(2020, 1, 30, 0, 0, 0, 0, 0).toUnixTimestamp(), "gooki|pookino", 3);
+    }
+
+    function getAddress() public view returns (address) {
+        return address(this); 
     }
 }
