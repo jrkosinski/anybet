@@ -1,0 +1,56 @@
+<html>
+    <head>
+        <script type='text/javascript' src='https://code.jquery.com/jquery-1.12.4.js'></script>
+        <script stype='text/javascript' src='https://code.jquery.com/ui/1.12.1/jquery-ui.js'></script>
+    
+        <script type='text/javascript' src="/js/api.js"></script>
+        <script type='text/javascript' src="/js/common.js"></script>
+        <script type='text/javascript' src="/js/events.js"></script>
+    </head>
+    <body>
+        <a href="#" id="event-create-button">create new</a>
+        <br/><br/>
+        <div id="events-list-div">
+
+        </div>
+
+        <div id="event-detail-overlay" class="overlay-form">
+            <div class="form-outline">
+                id:
+                <div id="event-detail-id-div"></div>
+                name:
+                <div id="event-detail-name-div"></div>
+                options:
+                <div id="event-detail-options-div"></div>
+                date:
+                <div id="event-detail-date-div"></div>
+
+                <br/><br/>
+                <input type="button" id="event-cancel-button" value="cancel" />
+                <input type="button" id="event-lock-button" value="lock" />
+                <input type="button" id="event-complete-button" value="complete" />
+            </div>
+        </div>
+
+        <div id="event-create-overlay" class="overlay-form">
+            <div class="form-outline">
+                <div>
+                    name:
+                    <input type="text" id="event-create-name-text" value=""/>
+                </div>
+                <div>
+                    options:
+                    <textarea id="event-create-options-text" rows="7" cols="20"></textarea>
+                </div>
+                <div>
+                    date:
+                    <input type="text" id="event-create-date-text" value=""/>
+                </div>
+
+                <br/><br/>
+                <input type="button" id="event-create-cancel-button" value="cancel" />
+                <input type="button" id="event-create-create-button" value="create" />
+            </div>
+        </div>
+    </body>
+</html>
