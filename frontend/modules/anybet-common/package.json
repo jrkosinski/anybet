@@ -1,0 +1,14 @@
+{
+  "name": "anybet-common",
+  "version": "1.0.3",
+  "description": "common & generic functionality",
+  "main": "index.js",
+  "scripts": {
+    "test": ""
+  },
+  "author": "John R. Kosinski",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "asyncawait": "^1.0.6"
+  }
+}

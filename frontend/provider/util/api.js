@@ -7,11 +7,13 @@ const exception = common.exceptions('API');
 const ROPSTEN_PROVIDER = "https://ropsten.infura.io/v3/811b27d11a824e41bb4e9f57ec7f47f2"; 
 const LOCAL_PROVIDER = "http://localhost:9545"; 
 
-const web3js = new web3(new web3.providers.HttpProvider(ROPSTEN_PROVIDER));
+const web3js = new web3(new web3.providers.HttpProvider(LOCAL_PROVIDER));
 
-//const address = '0xDB83D5291CCAce20949a21B5524C93F202E9B1ba'; 
-const _contractAddress = '0x7B2FcEF2d89e31fbb992aF80a19A516A7EF4259B'; 
-const _ownerAddress = '0x0fF34fCF14571ceD47a94015eaFdB27B9fCB0338'; 
+const _contractAddress = '0xDB83D5291CCAce20949a21B5524C93F202E9B1ba'; 
+//const _contractAddress = '0x7B2FcEF2d89e31fbb992aF80a19A516A7EF4259B'; 
+
+//const _ownerAddress = '0x0fF34fCF14571ceD47a94015eaFdB27B9fCB0338'; 
+let _ownerAddress = null; 
 
 const abi = [
     {
@@ -285,8 +287,14 @@ let _accounts = null;
 const initializeWeb3 = async(() => {
     _accounts = await(web3js.eth.getAccounts()); 
 
-    const balance = await(web3js.eth.getBalance(_ownerAddress));
+    if (!_ownerAddress) 
+        _ownerAddress = _accounts[0]; 
+
+
+    let balance = await(web3js.eth.getBalance(_ownerAddress));
     web3js.eth.personal.unlockAccount(_ownerAddress); 
+    //web3js.eth.sendTransaction({from:_ownerAddress,to:"0x0fF34fCF14571ceD47a94015eaFdB27B9fCB0338", value:Math.floor(balance/2)});
+    
     console.log(_accounts);
 });
 

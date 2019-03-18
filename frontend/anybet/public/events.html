@@ -1,11 +1,78 @@
 <html>
     <head>
-            <script type='text/javascript' src="/js/api.js"></script>
-            <script type='text/javascript' src="/js/events.js"></script>
+        <script type='text/javascript' src='https://code.jquery.com/jquery-1.12.4.js'></script>
+        <script stype='text/javascript' src='https://code.jquery.com/ui/1.12.1/jquery-ui.js'></script>
+    
+        <script type='text/javascript' src="/js/web3.js"></script>
+        <script type='text/javascript' src="/js/config.js"></script>
+        <script type='text/javascript' src="/js/api.js"></script>
+        <script type='text/javascript' src="/js/common.js"></script>
+        <script type='text/javascript' src="/js/events.js"></script>
+
+        <link rel='stylesheet' type='text/css' href='css/main.css' />
     </head>
     <body>
+        <a href="#" id="event-create-button">create new</a>
+        <br/><br/>
         <div id="events-list-div">
 
+        </div>
+
+        <div id="event-detail-overlay" class="overlay-form">
+            <div class="form-outline">
+                <img id='close-detail-dialog' src='images/close-button.png' class='close-button'/>
+                                
+                <div>
+                    provider address:
+                    <span id="event-detail-provider-div"></span>
+                </div>
+                <div>
+                    id:
+                    <span id="event-detail-id-div"></span>
+                </div>
+                <div>
+                    name:
+                    <span id="event-detail-name-div"></span>
+                </div>
+                <div>
+                    date:
+                    <span id="event-detail-date-div"></span>
+                </div>
+                <div>
+                    options:
+                    <span id="event-detail-options-div"></span>
+                </div>
+                <div>
+                    state:
+                    <span id="event-detail-state-div"></span>
+                </div>
+                <div>
+                    outcome:
+                    <span id="event-detail-outcome-div"></span>
+                </div>
+            </div>
+        </div>
+
+        <div id="event-create-overlay" class="overlay-form">
+            <div class="form-outline">
+                <img id='close-create-dialog' src='images/close-button.png' class='close-button'/>
+                <div>
+                    provider address:
+                    <input type="text" id="event-create-provider-text" size="50" value=""/>
+                </div>
+                <div>
+                    event id:
+                    <input type="text" id="event-create-id-text" size="50" value=""></textarea>
+                </div>
+                <div>
+                    minimum bet:
+                    <input type="text" id="event-create-minbet-text" size="50" value=""/>
+                </div>
+
+                <br/><br/>
+                <input type="button" id="event-create-cancel-button" value="cancel" />
+                <input type="button" id="event-create-create-button" value="create" />
+            </div>
         </div>
     </body>
 </html>

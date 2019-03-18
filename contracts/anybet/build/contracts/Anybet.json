@@ -27352,15 +27352,15 @@
     "version": "0.5.0+commit.1d4f565a.Emscripten.clang"
   },
   "networks": {
-    "3": {
+    "4447": {
       "events": {},
       "links": {},
-      "address": "0x255e71BE9Fc854a792a13c6bCb86Fbd397e82A7A",
-      "transactionHash": "0x0cfc4aa690790abf161cd1c409eeecf1cabc1c079fc7f9298d0b78d2da15a9ae"
+      "address": "0x3bEf203429eE95CC4732321F227616A84325a83a",
+      "transactionHash": "0x3fbeb3fe3dcc26e6b782968e04d37458a66bb9e067b47c037b875e507bda8626"
     }
   },
   "schemaVersion": "3.0.0",
-  "updatedAt": "2019-03-15T05:56:55.771Z",
+  "updatedAt": "2019-03-18T14:58:18.350Z",
   "devdoc": {
     "methods": {
       "transferOwnership(address)": {

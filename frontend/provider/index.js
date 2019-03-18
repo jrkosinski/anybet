@@ -1,3 +1,5 @@
+'use strict' 
+
 const await = require('asyncawait/await'); 
 const async = require('asyncawait/async'); 
 const express = require('express');

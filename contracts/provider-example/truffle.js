@@ -31,6 +31,14 @@ module.exports = {
 			network_id: 3, 
 			gas: 4700000, 
 			from: "0x0fF34fCF14571ceD47a94015eaFdB27B9fCB0338".toLowerCase()
+		}, 
+		ropsten_local: {
+			provider: function() {
+				return new HDWalletProvider(mnemonic, "https://ropsten.infura.io/v3/811b27d11a824e41bb4e9f57ec7f47f2");
+			}, 
+			network_id: 3, 
+			gas: 4700000, 
+			from: "0x0fF34fCF14571ceD47a94015eaFdB27B9fCB0338".toLowerCase()
 		}
 		/*
 		rinkeby: {

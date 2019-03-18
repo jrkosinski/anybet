@@ -196,7 +196,7 @@
   "deployedBytecode": "0x",
   "sourceMap": "",
   "deployedSourceMap": "",
-  "source": "pragma solidity ^0.5.0;\n\ncontract ProviderInterface {\n\n    enum EventState {\n        Unknown,    // 0 - event maybe nonexistent\n        Pending,    // 1 - event not yet completed or cancelled\n        Locked,     // 2 - betting is locked, event may be underway\n        Completed,  // 2 - event has taken place; outcome should be in\n        Cancelled   // 3 - event was cancelled; there's no outcome\n    }\n\n    function getPendingEvents() public view returns (bytes32[] memory);\n\n    function getAllEvents() public view returns (bytes32[] memory);\n\n    function eventExists(bytes32 _eventId) public view returns (bool); \n\n    function addEvent(string memory _name, uint _date, string memory _options, uint8 _optionCount) public returns (bytes32);\n\n    function cancelEvent(bytes32 _eventId) external; \n\n    function lockEvent(bytes32 _eventId) external; \n\n    function completeEvent(bytes32 _eventId, uint8 _outcome) external; \n\n    function getEvent(bytes32 _eventId) public view returns (\n        bytes32 eventId,\n        string memory name,\n        EventState state, \n        uint date, \n        string memory options,\n        uint8 optionCount,\n        uint8 outcome);\n\n\n    // -- TEST FUNCTIONS --\n\n    function testConnection() public pure returns (bool);\n\n    function addTestData() public; \n}\n",
+  "source": "pragma solidity ^0.5.0;\n\ncontract ProviderInterface {\n\n    enum EventState {\n        Unknown,    // 0 - event maybe nonexistent\n        Pending,    // 1 - event not yet completed or cancelled\n        Locked,     // 2 - betting is locked, event may be underway\n        Completed,  // 3 - event has taken place; outcome should be in\n        Cancelled   // 4 - event was cancelled; there's no outcome\n    }\n\n    function getPendingEvents() public view returns (bytes32[] memory);\n\n    function getAllEvents() public view returns (bytes32[] memory);\n\n    function eventExists(bytes32 _eventId) public view returns (bool); \n\n    function addEvent(string memory _name, uint _date, string memory _options, uint8 _optionCount) public returns (bytes32);\n\n    function cancelEvent(bytes32 _eventId) external; \n\n    function lockEvent(bytes32 _eventId) external; \n\n    function completeEvent(bytes32 _eventId, uint8 _outcome) external; \n\n    function getEvent(bytes32 _eventId) public view returns (\n        bytes32 eventId,\n        string memory name,\n        EventState state, \n        uint date, \n        string memory options,\n        uint8 optionCount,\n        uint8 outcome);\n\n\n    // -- TEST FUNCTIONS --\n\n    function testConnection() public pure returns (bool);\n\n    function addTestData() public; \n}\n",
   "sourcePath": "/home/acer/Desktop/anybet/code/contracts/provider-example/contracts/ProviderInterface.sol",
   "ast": {
     "absolutePath": "/home/acer/Desktop/anybet/code/contracts/provider-example/contracts/ProviderInterface.sol",
@@ -2116,7 +2116,7 @@
   },
   "networks": {},
   "schemaVersion": "3.0.0",
-  "updatedAt": "2019-03-18T07:27:33.146Z",
+  "updatedAt": "2019-03-18T14:56:07.318Z",
   "devdoc": {
     "methods": {}
   },
