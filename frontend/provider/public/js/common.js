@@ -18,6 +18,15 @@ String.prototype.padLeft = function(totalLen, paddingChar) {
 	return target;
 };
 
+const enums = {
+    eventState: {
+        unknown: 0,
+        pending: 1, 
+        locked: 2, 
+        completed: 3, 
+        cancelled: 4
+    }
+}
 
 function ExceptionHelper() {
     this.try = (callback) => {
@@ -108,6 +117,9 @@ $(document).ready(function () {
         getFromQuerystring, 
         formatTimestamp, 
         getDateFromTimestamp,
-        getTimeFromTimestamp
+        getTimeFromTimestamp, 
+
+        enums,
+        exception
     };
 }); 

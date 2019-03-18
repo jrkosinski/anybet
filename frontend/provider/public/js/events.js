@@ -3,6 +3,7 @@
 let _providerId = null; 
 let _currentEventId = null; 
 
+
 function showEventDetail(evt) {
     _currentEventId = evt.id; 
 
@@ -10,6 +11,8 @@ function showEventDetail(evt) {
     $("#event-detail-name-div").text(evt.name); 
     $("#event-detail-date-div").text(formatTimestamp(evt.date)); 
     $("#event-detail-options-div").empty(); 
+    $("#event-detail-state-div").text(evt.state); 
+    $("#event-detail-outcome-div").text(evt.outcome); 
 
     if (evt.options && evt.options.length) {
         for (let n=0; n<evt.options.length; n++) {
@@ -21,7 +24,7 @@ function showEventDetail(evt) {
 
 function clearCreateForm() {
     $("#event-create-name-text").val(""); 
-    $("#event-create-date-text").val(""); 
+    $("#event-create-date-text").val(Math.floor(new Date().getTime()/1000)); 
     $("#event-create-options-text").val(""); 
 }
 
@@ -39,7 +42,7 @@ function onEventClick(providerId, eventId) {
 }
 
 function refreshEvents(providerId) {
-    api.getAllEvents(providerId, (data, err) => {
+    api.getPendingEvents(providerId, (data, err) => {
         if (err) {
             common.showError(err); 
         }
@@ -66,6 +69,7 @@ function onCancelButtonClick(providerId, eventId) {
         else {
             refreshEvents(providerId); 
         }
+        hideForm("#event-detail-overlay"); 
     });
 }
 
@@ -77,16 +81,50 @@ function onLockButtonClick(providerId, eventId) {
         else {
             refreshEvents(providerId); 
         }
+        hideForm("#event-detail-overlay"); 
     });
 }
 
 function onCompleteButtonClick(providerId, eventId) {
-    api.completeEvent(providerId, eventId, (data, err) => {
+    api.completeEvent(providerId, eventId, 0, (data, err) => {
         if (err) {
             showError(err); 
         }
         else {
             refreshEvents(providerId); 
+        }
+        hideForm("#event-detail-overlay"); 
+    });
+}
+
+function onCreateEventButtonClick(providerId) {
+    const name = $("#event-create-name-text").val();
+    const rawOptions = $("#event-create-options-text").val(); 
+    const dateString = $("#event-create-date-text").val(); 
+
+    const options = []; 
+    const items = rawOptions.split('\n'); 
+    for (let n=0; n<items.length; n++) {
+        const item = items[n].trim(); 
+        if (item.length) {
+            options.push(item);
+        }
+    }
+
+    let date = 0; 
+    if (dateString && dateString.length) {
+        date = parseInt(dateString);
+    }
+
+    api.createEvent(providerId, name, options, date, (data, err) => {
+        if (err) {
+            common.showError(err); 
+        }
+        else {
+            if (data) {
+                hideForm("#event-create-overlay"); 
+                refreshEvents(providerId); 
+            }
         }
     });
 }
@@ -100,12 +138,12 @@ $(document).ready(() => {
     refreshEvents(_providerId);
 
     $("#event-create-button").click(() => {
+        clearCreateForm();
         showForm("#event-create-overlay"); 
     });
 
     $("#event-create-create-button").click(() => {
-        clearCreateForm();
-        hideForm("#event-create-overlay"); 
+        onCreateEventButtonClick(_providerId);
     });
 
     $("#event-create-cancel-button").click(() => {
@@ -123,5 +161,13 @@ $(document).ready(() => {
 
     $("#event-complete-button").click(() => {
         onCompleteButtonClick(_providerId, _currentEventId); 
+    });
+
+    $("#close-create-dialog").click(() => {
+        hideForm("#event-create-overlay")
+    });
+
+    $("#close-detail-dialog").click(() => {
+        hideForm("#event-detail-overlay")
     });
 });

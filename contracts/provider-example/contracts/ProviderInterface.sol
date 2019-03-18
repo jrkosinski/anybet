@@ -6,8 +6,8 @@ contract ProviderInterface {
         Unknown,    // 0 - event maybe nonexistent
         Pending,    // 1 - event not yet completed or cancelled
         Locked,     // 2 - betting is locked, event may be underway
-        Completed,  // 2 - event has taken place; outcome should be in
-        Cancelled   // 3 - event was cancelled; there's no outcome
+        Completed,  // 3 - event has taken place; outcome should be in
+        Cancelled   // 4 - event was cancelled; there's no outcome
     }
 
     function getPendingEvents() public view returns (bytes32[] memory);
