@@ -1,10 +1,13 @@
 'use strict'; 
 
 let _currentEventId = null; 
+let _currentEvent = null; 
 let _showAll = false;
 
 function showEventDetail(evt) {
     _currentEventId = evt.id; 
+    _currentEvent = evt;
+    hideForm("#event-bet-form"); 
 
     $("#event-detail-provider-div").text(evt.provider); 
     $("#event-detail-id-div").text(evt.id); 
@@ -66,9 +69,35 @@ function getEventDivHtml(evt) {
 }
 
 function onCreateEventButtonClick() {
-    const provider = $("#event-create-provider-text").val();
+    const providerId = $("#event-create-provider-text").val();
     const eventId = $("#event-create-id-text").val(); 
-    const minBetString = $("#event-create-minbet-text").val(); 
+    const minBet = Math.abs(parseInt($("#event-create-minbet-text").val()));
+
+    window.contracts.anybet.addEvent(providerId, eventId, minBet, (err, data) => {
+        console.log(data);
+
+        if (data) {
+            refreshEvents(); 
+        }
+    });
+}
+
+function onPlaceBetButtonClick(evt) {
+    $("#bet-outcome-list").empty(); 
+    showForm("#event-bet-form"); 
+}
+
+function onConfirmBetButtonClick(eventId) {
+    const betAmount = parseInt($("#bet-amount-text").val()); 
+    const outcome = $("#bet-outcome-list").val(); 
+
+    window.contracts.anybet.placeBet(providerId, eventId, outcome, { amount: betAmount }, (err, data) => {
+        console.log(data);
+
+        if (data) {
+            refreshEvents(); 
+        }
+    });
 }
 
 
@@ -95,6 +124,14 @@ $(document).ready(() => {
 
     $("#event-cancel-button").click(() => {
         onCancelButtonClick(_currentEventId); 
+    });
+
+    $("#place-bet-button").click(() => {
+        onPlaceBetButtonClick(_currentEvent); 
+    });
+
+    $("#confirm-bet-button").click(() => {
+        onConfirmBetButtonClick(_currentEventId); 
     });
 
     $("#close-create-dialog").click(() => {
