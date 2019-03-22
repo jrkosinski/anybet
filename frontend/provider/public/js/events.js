@@ -2,7 +2,7 @@
 
 let _providerId = null; 
 let _currentEventId = null; 
-
+let _showAll = false;
 
 function showEventDetail(evt) {
     _currentEventId = evt.id; 
@@ -11,7 +11,7 @@ function showEventDetail(evt) {
     $("#event-detail-name-div").text(evt.name); 
     $("#event-detail-date-div").text(formatTimestamp(evt.date)); 
     $("#event-detail-options-div").empty(); 
-    $("#event-detail-state-div").text(evt.state); 
+    $("#event-detail-state-div").text(common.getStateName(evt.state)); 
     $("#event-detail-outcome-div").text(evt.outcome); 
 
     if (evt.options && evt.options.length) {
@@ -42,7 +42,8 @@ function onEventClick(providerId, eventId) {
 }
 
 function refreshEvents(providerId) {
-    api.getPendingEvents(providerId, (data, err) => {
+    const retrieveFunc = (_showAll) ? api.getAllEvents : api.getPendingEvents; 
+    retrieveFunc(providerId, (data, err) => {
         if (err) {
             common.showError(err); 
         }
@@ -62,11 +63,12 @@ function getEventDivHtml(providerId, evt) {
 }
 
 function onCancelButtonClick(providerId, eventId) {
-    api.cancelEvent(providerId, eventId, (data, err) => {
+    api.cancelEvent(providerId, eventId, (err, data) => {
         if (err) {
             showError(err); 
         }
         else {
+            hideForm("#event-detail-overlay");
             refreshEvents(providerId); 
         }
         hideForm("#event-detail-overlay"); 
@@ -74,11 +76,12 @@ function onCancelButtonClick(providerId, eventId) {
 }
 
 function onLockButtonClick(providerId, eventId) {
-    api.lockEvent(providerId, eventId, (data, err) => {
+    api.lockEvent(providerId, eventId, (err, data) => {
         if (err) {
             showError(err); 
         }
         else {
+            hideForm("#event-detail-overlay");
             refreshEvents(providerId); 
         }
         hideForm("#event-detail-overlay"); 
@@ -86,11 +89,12 @@ function onLockButtonClick(providerId, eventId) {
 }
 
 function onCompleteButtonClick(providerId, eventId) {
-    api.completeEvent(providerId, eventId, 0, (data, err) => {
+    api.completeEvent(providerId, eventId, 0, (err, data) => {
         if (err) {
             showError(err); 
         }
         else {
+            hideForm("#event-detail-overlay");
             refreshEvents(providerId); 
         }
         hideForm("#event-detail-overlay"); 
@@ -116,12 +120,13 @@ function onCreateEventButtonClick(providerId) {
         date = parseInt(dateString);
     }
 
-    api.createEvent(providerId, name, options, date, (data, err) => {
+    api.createEvent(providerId, name, options, date, (err, data) => {
         if (err) {
             common.showError(err); 
         }
         else {
-            if (data) {
+
+            if (data) {            
                 hideForm("#event-create-overlay"); 
                 refreshEvents(providerId); 
             }
@@ -169,5 +174,11 @@ $(document).ready(() => {
 
     $("#close-detail-dialog").click(() => {
         hideForm("#event-detail-overlay")
+    });
+
+    $("#show-all-checkbox").prop('checked', _showAll);
+    $("#show-all-checkbox").change(function() {
+        _showAll = this.checked;
+        refreshEvents(_providerId);
     });
 });

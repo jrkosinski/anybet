@@ -122,14 +122,13 @@ function runWebServer (){
     app.use(bodyParser());
 
 
-    app.get('/', (req, res) => { sendFile(res, '/sites.html'); });
-    app.get('/index.html', (req, res) => { sendFile(res, '/sites.html'); });
+    app.get('/', (req, res) => { sendFile(res, '/providers.html'); });
+    app.get('/index.html', (req, res) => { sendFile(res, '/providers.html'); });
     app.get('/favicon.ico', (req, res) => { 
         console.log('favicon'); 
         sendFile(res, '/images/icon.svg'); 
     }); 
 
-    registerGetFile('/index.html');
     registerGetFile('/providers.html');
     registerGetFile('/events.html');
 
@@ -188,7 +187,7 @@ function runWebServer (){
         });
     })); 
 
-    app.listen(config.httpPort, () => console.log('evs-admin-console listening on port ' + config.httpPort));
+    app.listen(config.httpPort, () => console.log('anybet provider listening on port ' + config.httpPort));
 }
 
 

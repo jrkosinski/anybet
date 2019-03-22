@@ -1,5 +1,8 @@
 'use strict'; 
 
+
+//TODO: is this being used at all? 
+
 function execApiCall (url, method, data, callback) {
     console.log('calling ' + url);
 
@@ -65,19 +68,6 @@ function createEvent(providerId, name, options, date, callback) {
     }, callback); 
 }
 
-function cancelEvent(providerId, eventId, callback) {
-    execApiCall(`/events/${eventId}`, 'PUT', { action: 'cancel'}, callback); 
-}
-
-function lockEvent(providerId, eventId, callback) {
-    execApiCall(`/events/${eventId}`, 'PUT', { action: 'lock'}, null, callback); 
-}
-
-function completeEvent(providerId, eventId, outcome, callback) {
-    execApiCall(`/events/${eventId}`, 'PUT', { action: 'complete', outcome:outcome}, callback); 
-}
-
-
 
 $(document).ready(function () {
     window.api = {
@@ -85,9 +75,6 @@ $(document).ready(function () {
         getAllEvents,
         getPendingEvents,
         getEventDetails,
-        createEvent,
-        cancelEvent,
-        lockEvent,
-        completeEvent
+        createEvent
     };
 }); 

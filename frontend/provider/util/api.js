@@ -302,11 +302,6 @@ initializeWeb3();
 
 
 const test = async(() => {
-
-    //web3.sendTransaction({to:"0x0fF34fCF14571ceD47a94015eaFdB27B9fCB0338", from:accounts[0], value:web3.toWei("0.5", "ether")})
-
-    //transfer some eth to 0x0fF34fCF14571ceD47a94015eaFdB27B9fCB0338
-
     const evts = await(_contract.methods.getPendingEvents().call()); 
     for (let n=0; n<evts.length; n++) {
         const evt = await(_contract.methods.getEvent(evts[n]).call()); 
@@ -323,18 +318,6 @@ const test = async(() => {
     if (exists) {
       console.log('but why?')
     }
-
-    //output = await(_contract.methods.cancelEvent(evts[1]).call()); 
-
-    /*
-    storeMyValue.methods.getPendingEvents().send({
-        from: accounts[0]
-      }, (error, transactionHash) => {
-        console.log("transaction hash is ",transactionHash);
-        this.setState({transactionHash});
-      });
-      */
-    
 });
 
 const getAllEvents = async((context) => {
@@ -465,19 +448,17 @@ const lockEvent = async((context, eventId) => {
 
 const completeEvent = async((context, eventId, outcome) => {
     return exception.try(() => {
-        return exception.try(() => {
-            let output = false;
+        let output = false;
     
-            const result = await(_contract.methods.completeEvent(eventId, outcome).send({from:_ownerAddress})); 
-            if (result) {
-                output = true;
-            }
+        const result = await(_contract.methods.completeEvent(eventId, outcome).send({from:_ownerAddress})); 
+        if (result) {
+            output = true;
+        }
     
-            return {
-                status: 200,
-                output: output
-            }; 
-        }, errorOption);
+        return {
+            status: 200,
+            output: output
+        }; 
     }, {
         defaultValue: {status: 500, content: null}
     });

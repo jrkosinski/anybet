@@ -29,8 +29,8 @@ function runWebServer (){
     //app.use(favicon('./public/images/favicon.ico'));
     app.use('/favicon.ico', express.static('./public/images/favicon.ico'));
 
-    app.get('/', (req, res) => { sendFile(res, '/sites.html'); });
-    app.get('/index.html', (req, res) => { sendFile(res, '/sites.html'); });
+    app.get('/', (req, res) => { sendFile(res, '/providers.html'); });
+    app.get('/index.html', (req, res) => { sendFile(res, '/providers.html'); });
     app.get('/favicon.ico', (req, res) => { 
         console.log('favicon'); 
         sendFile(res, '/images/icon.svg'); 

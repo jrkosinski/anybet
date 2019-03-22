@@ -109,6 +109,16 @@ function getTimeFromTimestamp(timestamp) {
     return h + ':' + m + ':' + s; 
 }
 
+function getStateName(state) {
+    state = parseInt(state); 
+    for (let e in enums.eventState) {
+        if (enums.eventState[e] === state) {
+            return e; 
+        }
+    }
+    return state.toString();
+}
+
 
 $(document).ready(function () {
     window.common = {
@@ -118,6 +128,7 @@ $(document).ready(function () {
         formatTimestamp, 
         getDateFromTimestamp,
         getTimeFromTimestamp, 
+        getStateName,
 
         enums,
         exception

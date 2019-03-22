@@ -1,7 +1,7 @@
 'use strict'; 
 
 let _currentEventId = null; 
-
+let _showAll = false;
 
 function showEventDetail(evt) {
     _currentEventId = evt.id; 
@@ -11,7 +11,7 @@ function showEventDetail(evt) {
     $("#event-detail-name-div").text(evt.name); 
     $("#event-detail-date-div").text(formatTimestamp(evt.date)); 
     $("#event-detail-options-div").empty(); 
-    $("#event-detail-state-div").text(evt.state); 
+    $("#event-detail-state-div").text(common.getStateName(evt.state)); 
     $("#event-detail-outcome-div").text(evt.outcome); 
 
     if (evt.options && evt.options.length) {
@@ -47,24 +47,12 @@ function onEventClick(eventId) {
             showEventDetail(evtObj); 
         }
     });
-    /*
-    api.getEventDetails(providerId, eventId, (data, err) => {
-        if (err) {
-            common.showError(err); 
-        }
-        else {
-            if (data) {
-                showEventDetail(data); 
-            }
-        }
-    }); 
-    */
 }
 
 function refreshEvents() {
-    window.contracts.anybet.getPendingEvents((err, data) => {
-        console.log(data);
-
+    const queryFunc = (_showAll) ? window.contracts.anybet.getAllEvents : window.contracts.anybet.getPendingEvents; 
+    queryFunc((err, data) => {
+        $("#events-list-div").empty();
         if (data && data.length) {
             for (let n=0; n<data.length; n++) {
                 $("#events-list-div").append(getEventDivHtml({ id: data[n] })); 
@@ -97,7 +85,7 @@ $(document).ready(() => {
     });
 
     $("#event-create-create-button").click(() => {
-        onCreateEventButtonClick(_providerId);
+        onCreateEventButtonClick();
     });
 
     $("#event-create-cancel-button").click(() => {
@@ -106,15 +94,7 @@ $(document).ready(() => {
     });
 
     $("#event-cancel-button").click(() => {
-        onCancelButtonClick(_providerId, _currentEventId); 
-    });
-
-    $("#event-lock-button").click(() => {
-        onLockButtonClick(_providerId, _currentEventId); 
-    });
-
-    $("#event-complete-button").click(() => {
-        onCompleteButtonClick(_providerId, _currentEventId); 
+        onCancelButtonClick(_currentEventId); 
     });
 
     $("#close-create-dialog").click(() => {
@@ -123,5 +103,11 @@ $(document).ready(() => {
 
     $("#close-detail-dialog").click(() => {
         hideForm("#event-detail-overlay")
+    });
+
+    $("#show-all-checkbox").prop('checked', _showAll);
+    $("#show-all-checkbox").change(function() {
+        _showAll = this.checked;
+        refreshEvents();
     });
 });

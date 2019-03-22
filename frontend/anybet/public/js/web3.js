@@ -1,5 +1,4 @@
 
-
 let AnybetContract = null;
 let Anybet = null;
 

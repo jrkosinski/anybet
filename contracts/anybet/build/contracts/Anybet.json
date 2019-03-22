@@ -27360,7 +27360,7 @@
     }
   },
   "schemaVersion": "3.0.0",
-  "updatedAt": "2019-03-18T14:58:18.350Z",
+  "updatedAt": "2019-03-22T08:22:41.068Z",
   "devdoc": {
     "methods": {
       "transferOwnership(address)": {

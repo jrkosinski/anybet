@@ -70,7 +70,7 @@ function cancelEvent(providerId, eventId, callback) {
 }
 
 function lockEvent(providerId, eventId, callback) {
-    execApiCall(`/events/${eventId}`, 'PUT', { action: 'lock'}, null, callback); 
+    execApiCall(`/events/${eventId}`, 'PUT', { action: 'lock'}, callback); 
 }
 
 function completeEvent(providerId, eventId, outcome, callback) {
