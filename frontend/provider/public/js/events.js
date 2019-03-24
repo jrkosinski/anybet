@@ -11,12 +11,14 @@ function showEventDetail(evt) {
     $("#event-detail-name-div").text(evt.name); 
     $("#event-detail-date-div").text(formatTimestamp(evt.date)); 
     $("#event-detail-options-div").empty(); 
+    $("#complete-options-list").empty(); 
     $("#event-detail-state-div").text(common.getStateName(evt.state)); 
     $("#event-detail-outcome-div").text(evt.outcome); 
 
     if (evt.options && evt.options.length) {
         for (let n=0; n<evt.options.length; n++) {
             $("#event-detail-options-div").append("<div>" + evt.options[n] + "</div>");
+            $("#complete-options-list").append(`<option value="${n}">${evt.options[n]}</option>`);
         }
     }
     showForm("#event-detail-overlay"); 
@@ -89,12 +91,19 @@ function onLockButtonClick(providerId, eventId) {
 }
 
 function onCompleteButtonClick(providerId, eventId) {
-    api.completeEvent(providerId, eventId, 0, (err, data) => {
+    hideForm("#event-detail-overlay"); 
+    showForm("#event-complete-overlay"); 
+}
+
+function onCompleteConfirmClick(providerId, eventId) {    
+    const outcome = parseInt($("#complete-options-list").val()); 
+    api.completeEvent(providerId, eventId, outcome, (err, data) => {
         if (err) {
             showError(err); 
         }
         else {
             hideForm("#event-detail-overlay");
+            hideForm("#event-complete-overlay");
             refreshEvents(providerId); 
         }
         hideForm("#event-detail-overlay"); 
@@ -138,6 +147,7 @@ function onCreateEventButtonClick(providerId) {
 $(document).ready(() => {
     hideForm("#event-detail-overlay"); 
     hideForm("#event-create-overlay"); 
+    hideForm("#event-complete-overlay"); 
 
     _providerId = common.getFromQuerystring("provider"); 
     refreshEvents(_providerId);
@@ -174,6 +184,15 @@ $(document).ready(() => {
 
     $("#close-detail-dialog").click(() => {
         hideForm("#event-detail-overlay")
+    });
+
+    $("#event-complete-confirm-button").click(() => {
+        onCompleteConfirmClick(_providerId, _currentEventId); 
+    });
+
+    $("#event-complete-cancel-button").click(() => {
+        hideForm("#event-complete-overlay");
+        showForm("#event-detail-overlay"); 
     });
 
     $("#show-all-checkbox").prop('checked', _showAll);
