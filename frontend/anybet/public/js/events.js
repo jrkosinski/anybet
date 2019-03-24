@@ -84,6 +84,12 @@ function onCreateEventButtonClick() {
 
 function onPlaceBetButtonClick(evt) {
     $("#bet-outcome-list").empty(); 
+
+    if (_currentEvent && _currentEvent.options && _currentEvent.options.length) {
+        for (let n=0; n<_currentEvent.options.length; n++) {
+            $("#bet-outcome-list").append(`<option value="${n}">${_currentEvent.options[n]}</option>`)
+        }
+    }
     showForm("#event-bet-form"); 
 }
 
