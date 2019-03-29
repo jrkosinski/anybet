@@ -1,0 +1,17 @@
+{
+  "name": "anybet-logging",
+  "version": "1.0.2",
+  "description": "generic logging to various media and repositories",
+  "main": "index.js",
+  "scripts": {
+    "test": ""
+  },
+  "author": "John R. Kosinski",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "asyncawait": "^1.0.6",
+    "winston": "^2.4.0",
+    "winston-cloudwatch": "^1.13.0",
+    "ws": "^3.3.2"
+  }
+}

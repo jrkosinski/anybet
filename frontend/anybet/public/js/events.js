@@ -85,25 +85,40 @@ function onCreateEventButtonClick() {
 function onPlaceBetButtonClick(evt) {
     $("#bet-outcome-list").empty(); 
 
-    if (_currentEvent && _currentEvent.options && _currentEvent.options.length) {
-        for (let n=0; n<_currentEvent.options.length; n++) {
-            $("#bet-outcome-list").append(`<option value="${n}">${_currentEvent.options[n]}</option>`)
+    if (_currentEvent) {
+        if (_currentEvent.options && _currentEvent.options.length) {
+            for (let n=0; n<_currentEvent.options.length; n++) {
+                $("#bet-outcome-list").append(`<option value="${n}">${_currentEvent.options[n]}</option>`)
+            }
         }
+
+        //prepopulate min bet 
+        $("#bet-amount-text").val(_currentEvent.minimumBet); 
     }
+
     showForm("#event-bet-form"); 
 }
 
 function onConfirmBetButtonClick(eventId) {
     const betAmount = parseInt($("#bet-amount-text").val()); 
     const outcome = $("#bet-outcome-list").val(); 
+    const outcomeText = $("#bet-outcome-list option:selected").text();
 
-    window.contracts.anybet.placeBet(providerId, eventId, outcome, { amount: betAmount }, (err, data) => {
-        console.log(data);
-
-        if (data) {
-            refreshEvents(); 
+    //validate min bet 
+    if (betAmount < _currentEvent.minimumBet) {
+        alert('Minimum bet is ' + _currentEvent.minimumBet); 
+    }
+    else {
+        if (confirm(`You are about to place a bet for ${betAmount} on ${outcomeText}. Do you want to go ahead?`)) {
+            window.contracts.anybet.placeBet(providerId, eventId, outcome, { amount: betAmount }, (err, data) => {
+                console.log(data);
+        
+                if (data) {
+                    refreshEvents(); 
+                }
+            });
         }
-    });
+    }
 }
 
 

@@ -285,17 +285,19 @@ const _contract = new web3js.eth.Contract(abi, _contractAddress);
 let _accounts = null;
 
 const initializeWeb3 = async(() => {
-    _accounts = await(web3js.eth.getAccounts()); 
-
-    if (!_ownerAddress) 
-        _ownerAddress = _accounts[0]; 
-
-
-    let balance = await(web3js.eth.getBalance(_ownerAddress));
-    web3js.eth.personal.unlockAccount(_ownerAddress); 
-    //web3js.eth.sendTransaction({from:_ownerAddress,to:"0x0fF34fCF14571ceD47a94015eaFdB27B9fCB0338", value:Math.floor(balance/2)});
+    exception.try(() => {
+        _accounts = await(web3js.eth.getAccounts()); 
     
-    console.log(_accounts);
+        if (!_ownerAddress) 
+            _ownerAddress = _accounts[0]; 
+    
+    
+        let balance = await(web3js.eth.getBalance(_ownerAddress));
+        web3js.eth.personal.unlockAccount(_ownerAddress); 
+        //web3js.eth.sendTransaction({from:_ownerAddress,to:"0x0fF34fCF14571ceD47a94015eaFdB27B9fCB0338", value:Math.floor(balance/2)});
+        
+        console.log(_accounts);
+    });
 });
 
 initializeWeb3(); 

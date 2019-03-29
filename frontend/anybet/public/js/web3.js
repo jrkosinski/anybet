@@ -304,7 +304,7 @@ $(document).ready(() => {
               "signature": "0xbee13e36"
             }
           ]); 
-        Anybet = AnybetContract.at('0x3bEf203429eE95CC4732321F227616A84325a83a'); 
+        Anybet = AnybetContract.at('0x8f764629D4bC6fC754ffc0C3C884c74A532E2Cae'); 
 
         window.contracts.anybet = Anybet;
     }

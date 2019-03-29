@@ -17,13 +17,6 @@ const config = require("./config");
 'use strict'; 
 require('dotenv').config();
 
-function applyCorsHeaders(response) {
-    response.setHeader('Access-Control-Allow-Origin', config.allowedOrigins);
-    response.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE');
-    response.setHeader('Access-Control-Allow-Headers', 'X-Custom-Header');
-    response.setHeader("Access-Control-Allow-Headers", "authtoken, Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
-}
-
 function executeCall(callTitle, req, res, call) {
     exception.try(() => {
         applyCorsHeaders(res);
@@ -41,6 +34,13 @@ function executeCall(callTitle, req, res, call) {
             res.status(response.status).send(response.content);
         }
     });
+}
+
+function applyCorsHeaders(response) {
+    response.setHeader('Access-Control-Allow-Origin', config.allowedOrigins);
+    response.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE');
+    response.setHeader('Access-Control-Allow-Headers', 'X-Custom-Header');
+    response.setHeader("Access-Control-Allow-Headers", "authtoken, Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
 }
 
 function addOptionsCall(app, path){ 

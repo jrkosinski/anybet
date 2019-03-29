@@ -74,6 +74,18 @@ contract Anybet is Ownable {
         return output; 
     }
 
+    function getAllEvents() public view returns (bytes32[] memory) {
+        //TODO: this might cost alot of gas
+        //collect up all the events
+        bytes32[] memory output = new bytes32[](events.length); 
+
+        for (uint n = events.length; n > 0; n--) {
+            output[n] = events[n].eventId;
+        }
+
+        return output; 
+    }
+
     function getEvent(bytes32 _eventId) public view returns (
         bytes32 eventId,
         address providerAddress,
@@ -166,6 +178,20 @@ contract Anybet is Ownable {
 
         return output; 
     }
+
+    //if state or outcome has changed, refresh from provider 
+    function refreshEventFromProvider(bytes32 _eventId) public returns (bool) {
+        require(_eventExists(_eventId), "Event not found"); 
+
+        uint eventIndex = _getEventIndex(_eventId); 
+        return _refreshEventFromProvider(events[eventIndex]); 
+    }
+
+    //handles payouts 
+    function finalizeBet(bytes32 _eventId) public returns (bool) {
+        
+    }
+
 
     // -- EXTERNAL METHODS -- 
 
