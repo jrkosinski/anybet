@@ -10,7 +10,8 @@ const common = require('anybet-common');
 const exception = common.exceptions('WEB'); 
 const logger = require('anybet-logging')("WEB");
 
-'use strict'; 
+const middleTier = require('./util/middleTier'); 
+
 require('dotenv').config();
 
 
@@ -80,24 +81,28 @@ function runWebServer (){
         });
     };
 
+    //OK
     app.get('/providers', (req, res) => {
         executeCall('GET /providers', req, res, (context) => {
             return await(middleTier.getAcceptedProviders(context)); 
         });
     });
 
+    //OK
     app.get('/events', (req, res) => {
         executeCall('GET /events', req, res, (context) => {
             return await(middleTier.getAllEvents(context)); 
         });
     });
 
+    //OK
     app.get('/events/pending', (req, res) => {
         executeCall('GET /events/pending', req, res, (context) => {
             return await(middleTier.getPendingEvents(context)); 
         });
     });
 
+    //OK
     app.get('/events/:eventid', async((req, res) => {
         const eventId = req.params.eventid;
         executeCall(`GET /events/${eventId}`, req, res, (context) => {
@@ -105,9 +110,10 @@ function runWebServer (){
         });
     })); 
 
+    //OK
     app.post('/events', async((req, res) => {
         executeCall(`POST /events/`, req, res, (context) => {
-            return await(middleTier.addEvent(context, context.body.name, context.body.options, context.body.date)); 
+            return await(middleTier.addEvent(context, context.providerAddress, context.body.providerEventId, context.body.minimumBet)); 
         });
     })); 
 

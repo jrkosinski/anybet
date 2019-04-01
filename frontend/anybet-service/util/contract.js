@@ -302,19 +302,40 @@ const initializeWeb3 = async(() => {
 
 initializeWeb3(); 
 
-const getAllEvents = async((context) => {
+const getAllEvents = async(() => {
     return exception.try(() => {
         return await(_contract.methods.getAllEvents().call()); 
     });
 });
 
-const getPendingEvents = async((context) => {
+const getPendingEvents = async(() => {
     return exception.try(() => {
         return await(_contract.methods.getPendingEvents().call()); 
     });
 });
 
+const getEventDetails = async((eventId) => {
+    return exception.try(() => {
+        return await(_contract.methods.getEvent(eventId).call()); 
+    });
+});
+
+const addEvent = async((providerAddress, providerEventId, minimumBet) => {
+    return exception.try(() => {
+        let eventId = null;
+
+        const result = await(_contract.methods.addEvent(providerAddress, providerEventId, minimumBet).send({from:_ownerAddress, gas: 3000000})); 
+        if (result) {
+            eventId = result;
+        }
+
+        return eventId;
+    });
+});
+
 module.exports = {
     getAllEvents,
-    getPendingEvents
+    getPendingEvents, 
+    getEventDetails, 
+    addEvent
 }; 

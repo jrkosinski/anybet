@@ -8,8 +8,31 @@ const enums = common.enums;
 const exception = common.exceptions('DATA'); 
 const logger = require('anybet-logging')("DATA");
 
+/* provider: {
+    id: <string>
+}*/
 const _providers = { }; 
+/* event: {
+    id:                 <string>
+    providerAddress:    <string> 
+	providerEventId:    <string>
+	name:               <string>
+	date:               <number>
+	minBetAmount:       <number>
+	state:              <number>
+	options:            <string[]>
+    outcome:            <number>
+    cacheTimestamp:     <number> 
+}*/
 const _events = { };
+/* bet: {
+    id:             <string> 
+    userAddress:    <string> 
+    eventId:        <string> 
+	amount:         <number>
+    outcome:        <number>
+    paid:           <number>
+} */
 const _bets = { }; 
 
 const /*provider{}*/ getAcceptedProviders = async(() => {
@@ -91,27 +114,56 @@ const syncEvents = async((events) => {
         }
 
         for (let id in events) {
-            if (!_events[id]) {
-                //add
-                _events[id] = events[id]; 
-            }
-            else {
-                //update 
-                const properties = [ 'state', 'outcome', 'options', 'name', 'minBetAmount', 'date', 'providerAddress', 'providerEventId' ]
-                for (let n=0; n<properties.length; n++) {
-                    const p = properties[n]; 
-                    if (events[id][p]) {
-                        _events[id][p] = events[id][p]; 
-                    }
-                }
-            }
+            await(syncEvent(events[id]));
         }
     });
 });
 
+const syncEvent = async((event) => {
+    exception.try(() => {
+        if (!_events[event.id]) {
+            //add
+            _events[event.id] = event; 
+        }
+        else {
+            //update 
+            const properties = [ 'state', 'outcome', 'options', 'name', 'minBetAmount', 'date', 'providerAddress', 'providerEventId' ]
+            for (let n=0; n<properties.length; n++) {
+                const p = properties[n]; 
+                if (!common.types.isUndefinedOrNull(event[p])) {
+                    _events[event.id][p] = event[p]; 
+                }
+            }
+        }
+    }); 
+}); 
+
 const syncBets = async((bets) => {
     exception.try(() => {
-        
+
+        //delete 
+        for (let id in _bets) {
+            if (!bets[id]) {
+                delete _bets[id]; 
+            }
+        }
+
+        for (let id in bets) {
+            if (!_bets[id]) {
+                //add
+                _bets[id] = bets[id]; 
+            }
+            else {
+                //update 
+                const properties = [ 'paid' ]
+                for (let n=0; n<properties.length; n++) {
+                    const p = properties[n]; 
+                    if (!common.types.isUndefinedOrNull(bets[id][p])) {
+                        _bets[id][p] = bets[id][p]; 
+                    }
+                }
+            }
+        }
     });
 }); 
 
@@ -127,5 +179,6 @@ module.exports = {
     placeBet, 
 
     syncEvents,
+    syncEvent,
     syncBets
 }
