@@ -41,17 +41,21 @@ const /*provider{}*/ getAcceptedProviders = async(() => {
 
 const /*event{}*/ getAllEvents = async(() => {
     return exception.try(() => {
-        return _events;
+        const output = []; 
+        for (let id in _events) {
+            output.push(_events[id]);
+        }
+        return output;
     });
 });
 
 const /*event{}*/ getPendingEvents = async(() => {
     return exception.try(() => {
-        const output = { }; 
+        const output = []; 
         for (let id in _events) {
             const evt = _events[id]; 
             if (evt.state === enums.eventState.pending) {
-                output[id] = evt; 
+                output.push(evt);
             }
         }
 

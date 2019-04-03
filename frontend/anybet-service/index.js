@@ -11,6 +11,7 @@ const exception = common.exceptions('WEB');
 const logger = require('anybet-logging')("WEB");
 
 const middleTier = require('./util/middleTier'); 
+const config = require('./config'); 
 
 require('dotenv').config();
 
@@ -59,6 +60,23 @@ function createCallContext(req) {
     }
 }
 
+function logRequestStart(callTitle, request) {
+    let text = callTitle; 
+    let qstringParams = ""; //getRequestParamsAsString(request.query); 
+    let bodyParams = null;
+    if (request.body) {
+        bodyParams = JSON.stringify(request.body); 
+    }
+    if (bodyParams === "{}")
+        bodyParams = "";
+
+    logger.info(text + " " + qstringParams + bodyParams); 
+}
+
+function logRequestEnd(callTitle, response) {
+    logger.info(callTitle + " returning " + JSON.stringify(response)); 
+}
+
 function runWebServer (){
     app.use(bodyParser.json());
     app.use(bodyParser());
@@ -82,30 +100,33 @@ function runWebServer (){
     };
 
     //OK
-    app.get('/providers', (req, res) => {
+    app.get('/providers', async((req, res) => {
         executeCall('GET /providers', req, res, (context) => {
             return await(middleTier.getAcceptedProviders(context)); 
         });
-    });
+    })); 
 
     //OK
-    app.get('/events', (req, res) => {
+    app.get('/events', async((req, res) => {
         executeCall('GET /events', req, res, (context) => {
             return await(middleTier.getAllEvents(context)); 
         });
-    });
+    })); 
 
     //OK
-    app.get('/events/pending', (req, res) => {
+    app.get('/events/pending', async((req, res) => {
         executeCall('GET /events/pending', req, res, (context) => {
             return await(middleTier.getPendingEvents(context)); 
         });
-    });
+    })); 
 
     //OK
     app.get('/events/:eventid', async((req, res) => {
         const eventId = req.params.eventid;
-        executeCall(`GET /events/${eventId}`, req, res, (context) => {
+        const relUrl = `/events/${eventId}`;
+        addOptionsCall(app, relUrl);
+        
+        executeCall(`GET ${relUrl}`, req, res, (context) => {
             return await(middleTier.getEventDetails(context, eventId)); 
         });
     })); 
@@ -113,7 +134,7 @@ function runWebServer (){
     //OK
     app.post('/events', async((req, res) => {
         executeCall(`POST /events/`, req, res, (context) => {
-            return await(middleTier.addEvent(context, context.providerAddress, context.body.providerEventId, context.body.minimumBet)); 
+            return await(middleTier.addEvent(context, context.body.providerAddress, context.body.providerEventId, context.body.minimumBet)); 
         });
     })); 
 

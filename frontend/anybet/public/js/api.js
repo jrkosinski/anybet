@@ -1,8 +1,6 @@
 'use strict'; 
 
 
-//TODO: is this being used at all? 
-
 function execApiCall (url, method, data, callback) {
     console.log('calling ' + url);
 
@@ -42,29 +40,40 @@ function execApiCall (url, method, data, callback) {
 }
 
 function getProviders(callback) {
-    callback([  {
-            id: '0xDCCF5053f0a62F2C6E59bE7C16579D566E5F41F1'
-        }
-    ]); 
+    execApiCall("/providers", "GET", null, callback); 
 }
 
 function getAllEvents(providerId, callback) {
     execApiCall('/events', 'GET', null, callback); 
 }
 
-function getPendingEvents(providerId, callback) {
+function getEvents(getAll, callback) {
+    if (getAll) {
+        getAllEvents(callback); 
+    }
+    else {
+        getPendingEvents(callback); 
+    }
+}
+
+function getAllEvents( callback) {
+    execApiCall('/events', 'GET', null, callback); 
+}
+
+function getPendingEvents( callback) {
     execApiCall('/events/pending', 'GET', null, callback); 
 }
 
-function getEventDetails(providerId, eventId, callback) {
+function getEventDetails(eventId, callback) {
+    alert(eventId);
     execApiCall('/events/' + eventId, 'GET', null, callback); 
 }
 
-function createEvent(providerId, name, options, date, callback) {
+function addEvent(providerId, eventId, minBet, callback) {
     execApiCall('/events', 'POST', {
-        name: name, 
-        options: options, 
-        date: date
+        providerAddress: providerId, 
+        providerEventId: eventId, 
+        minimumBet: minBet
     }, callback); 
 }
 
@@ -72,9 +81,10 @@ function createEvent(providerId, name, options, date, callback) {
 $(document).ready(function () {
     window.api = {
         getProviders,
+        getEvents,
         getAllEvents,
         getPendingEvents,
         getEventDetails,
-        createEvent
+        addEvent
     };
 }); 

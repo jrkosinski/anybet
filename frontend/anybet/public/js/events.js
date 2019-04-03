@@ -9,7 +9,7 @@ function showEventDetail(evt) {
     _currentEvent = evt;
     hideForm("#event-bet-form"); 
 
-    $("#event-detail-provider-div").text(evt.provider); 
+    $("#event-detail-provider-div").text(evt.providerAddress); 
     $("#event-detail-id-div").text(evt.id); 
     $("#event-detail-name-div").text(evt.name); 
     $("#event-detail-date-div").text(formatTimestamp(evt.date)); 
@@ -32,33 +32,22 @@ function clearCreateForm() {
 }
 
 function onEventClick(eventId) {
-    window.contracts.anybet.getEvent(eventId, (err, data) => {
+    api.getEventDetails(eventId, (data, err) => {
         console.log(data);
 
         if (data) {
-            const evtObj = {
-                id: data[0],
-                provider: data[1],
-                name: data[3], 
-                date: data[4].c[0],
-                minimumBet: data[5].c[0],
-                state: data[6].c[0],
-                options: data[7].split("|"),
-                
-                outcome: data[9].c[0],
-            }; 
-            showEventDetail(evtObj); 
+            showEventDetail(data); 
         }
     });
 }
 
 function refreshEvents() {
-    const queryFunc = (_showAll) ? window.contracts.anybet.getAllEvents : window.contracts.anybet.getPendingEvents; 
-    queryFunc((err, data) => {
+    api.getEvents(_showAll, (data, err) => {
         $("#events-list-div").empty();
+        
         if (data && data.length) {
             for (let n=0; n<data.length; n++) {
-                $("#events-list-div").append(getEventDivHtml({ id: data[n] })); 
+                $("#events-list-div").append(getEventDivHtml({ id: data[n].id })); 
             }
         }
     });
@@ -73,13 +62,13 @@ function onCreateEventButtonClick() {
     const eventId = $("#event-create-id-text").val(); 
     const minBet = Math.abs(parseInt($("#event-create-minbet-text").val()));
 
-    window.contracts.anybet.addEvent(providerId, eventId, minBet, (err, data) => {
+    api.addEvent(providerId, eventId, minBet, (data, err) => {
         console.log(data);
 
         if (data) {
             refreshEvents(); 
         }
-    });
+    }); 
 }
 
 function onPlaceBetButtonClick(evt) {
@@ -110,7 +99,7 @@ function onConfirmBetButtonClick(eventId) {
     }
     else {
         if (confirm(`You are about to place a bet for ${betAmount} on ${outcomeText}. Do you want to go ahead?`)) {
-            window.contracts.anybet.placeBet(providerId, eventId, outcome, { amount: betAmount }, (err, data) => {
+            window.contracts.anybet.placeBet(providerId, eventId, outcome, { amount: betAmount }, (data, err) => {
                 console.log(data);
         
                 if (data) {

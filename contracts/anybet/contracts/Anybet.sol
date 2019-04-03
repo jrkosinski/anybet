@@ -80,7 +80,7 @@ contract Anybet is Ownable {
         bytes32[] memory output = new bytes32[](events.length); 
 
         for (uint n = events.length; n > 0; n--) {
-            output[n] = events[n].eventId;
+            output[n-1] = events[n-1].eventId;
         }
 
         return output; 

@@ -14,7 +14,7 @@ const contract = require('./contract.js');
 
 const EVENT_CACHE_EXPIRE_MINUTES = 60; 
 
-const _events = { cacheTimestamp: 0, data: {} };
+const _events = { cacheTimestamp: 1, data: {} };
 const _bets = { }; 
 
 const parseIntNull = (n) => {
@@ -66,11 +66,18 @@ const refreshEventsFromContract = async(() => {
     exception.try(() => {
         //TODO: store this as setting 
         if (dates.minutesSinceTimestamp(_events.cacheTimestamp) >= EVENT_CACHE_EXPIRE_MINUTES) {
-            const events = await(contract.getAllEvents()); 
+            const allEvents = await(contract.getAllEvents());
+            const pendingEvents = await(contract.getPendingEvents());  
             _events.data = {}; 
 
-            for (let n=0; n<events.length; n++) {
-                _events.data[events[n]] = { id: events[n]}; 
+            if (allEvents) {
+                for (let n=0; n<allEvents.length; n++) {
+                    const event =  { id: allEvents[n]}
+                    _events.data[allEvents[n]] = event; 
+                    if (common.arrays.exists(pendingEvents, (e) => { return (e === event.id) })) {
+                        event.state = common.enums.eventState.pending;
+                    }
+                }
             }
 
             _events.cacheTimestamp = dates.getTimestamp(); 
@@ -90,7 +97,8 @@ const start = async(() => {
 });
 
 const getAcceptedProviders = async((context) => {
-    return await(dataAccess.getAcceptedProviders());
+    const data = await(dataAccess.getAcceptedProviders());
+    return { status:200, content: data }; 
 });
 
 //TODO: cache
@@ -101,7 +109,7 @@ const /*event{}*/ getAllEvents = async((context) => {
         await(refreshEventsFromContract()); 
         const output = await(dataAccess.getAllEvents()); 
 
-        return { status: 200, data: output }; 
+        return { status: 200, content: output }; 
     });
 });
 
@@ -113,7 +121,7 @@ const /*event{}*/ getPendingEvents = async((context) => {
         await(refreshEventsFromContract()); 
         const output = await(dataAccess.getPendingEvents()); 
         
-        return { status: 200, data: data }; 
+        return { status: 200, content: output }; 
     });
 });
 
@@ -145,7 +153,7 @@ const /*event*/ getEventDetails = async((context, eventId) => {
         if (needsRefresh) {
             
             //get from contract 
-            const contractEvent = contract.getEventDetails(eventId); 
+            const contractEvent = await(contract.getEventDetails(eventId)); 
             if (contractEvent) {
                 output = conversions.events.contractToDb(contractEvent); 
 
@@ -161,7 +169,7 @@ const /*event*/ getEventDetails = async((context, eventId) => {
             output = cachedEvent;
         }
 
-        return output; 
+        return { status:200, content: output }; 
     });
 });
 
@@ -176,7 +184,7 @@ const /*event*/ addEvent = async((context, providerAddress, providerEventId, min
             output = await(getEventDetails(context, eventId)); 
         }
 
-        return output; 
+        return { status:200, content: output }; 
     });
 });
 
@@ -198,7 +206,13 @@ const placeBet = async((context, betId, userAddress, eventId, outcome, amount) =
             amount: amount
         };
         const data = await(dataAccess.placeBet(bet));
-        return { status: 200, data: data }; 
+        return { status: 200, content: data }; 
+    });
+});
+
+const getBetTotals = async((context) => {
+    return exception.try(() => {
+
     });
 });
 
