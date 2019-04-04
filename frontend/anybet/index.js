@@ -44,7 +44,7 @@ function runWebServer (){
     registerGetFile('/js/config.js');
     registerGetFile('/js/providers.js');
     registerGetFile('/js/events.js');
-    registerGetFile('/js/web3.js');
+    registerGetFile('/js/contract.js');
 
     registerGetFile('/css/main.css');
 

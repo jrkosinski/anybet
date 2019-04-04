@@ -107,6 +107,11 @@ contract Anybet is Ownable {
         return (0, address(0), 0, "", 0, 0, ProviderInterface.EventState.Unknown, "", 0, 0);
     }
 
+    function getEventId(address _providerAddress, bytes32 _eventId) public pure returns (bytes32) {        
+        bytes32 newId = keccak256(abi.encodePacked(_providerAddress, _eventId)); 
+        return newId;
+    }
+
     function placeBet(bytes32 _eventId, uint8 _outcome) public payable returns (bool) {                                 
         bool output = false; 
 
@@ -212,27 +217,30 @@ contract Anybet is Ownable {
 
         if (state == ProviderInterface.EventState.Pending) {
             //generate new unique event index 
-            newId = keccak256(abi.encodePacked(_providerAddress, _eventId)); 
+            newId = getEventId(_providerAddress, _eventId); 
 
-            //add the event 
-            uint newCount = events.push(Event(
-                newId,
-                _providerAddress, 
-                _eventId,
-                name, 
-                date,
-                (_minBetAmt < globalMinBetAmt) ? globalMinBetAmt : _minBetAmt,
-                ProviderInterface.EventState.Pending,
-                options, 
-                optionCount,
-                0, 
-                0
-            )); 
+            //check for duplicate 
+            if (eventIdToIndex[newId] == 0) {
+                //add the event 
+                uint newCount = events.push(Event(
+                    newId,
+                    _providerAddress, 
+                    _eventId,
+                    name, 
+                    date,
+                    (_minBetAmt < globalMinBetAmt) ? globalMinBetAmt : _minBetAmt,
+                    ProviderInterface.EventState.Pending,
+                    options, 
+                    optionCount,
+                    0, 
+                    0
+                )); 
 
-            //add event to index mapping
-            eventIdToIndex[newId] = newCount;
+                //add event to index mapping
+                eventIdToIndex[newId] = newCount;
 
-            //add event to bets mapping 
+                //add event to bets mapping 
+            }
         }
 
         return newId;

@@ -2,6 +2,7 @@
 
 const await = require('asyncawait/await'); 
 const async = require('asyncawait/async'); 
+const ethUnits = require('ethereumjs-units'); 
 
 const common = require('anybet-common'); 
 const enums = common.enums;
@@ -92,8 +93,21 @@ const eventHasDetails = (event) => {
 
 // ---- 
 
-const start = async(() => {
+const start = async((onFinished) => {
     await(refreshEventsFromContract()); 
+    if (onFinished) {
+        onFinished(); 
+    }
+});
+
+const getContractInfo = async((context) => {
+    return {
+        status: 200, 
+        content: {
+            abi: contract.abi, 
+            address: contract.address
+        }
+    }; 
 });
 
 const getAcceptedProviders = async((context) => {
@@ -178,7 +192,8 @@ const /*event*/ addEvent = async((context, providerAddress, providerEventId, min
         let output = null; 
 
         //attempt to add to contract 
-        const eventId = await(contract.addEvent(providerAddress, providerEventId, minimumBet)); 
+        const minBet = ethUnits.convert(minimumBet, 'wei', 'eth'); 
+        const eventId = await(contract.addEvent(providerAddress, providerEventId, minBet)); 
         if (eventId) {
             //if successful add, add to cache & DB 
             output = await(getEventDetails(context, eventId)); 
@@ -196,15 +211,17 @@ const /*bet{}*/ getBets = async((context, eventId, userAddress) => {
 });
 
 //TODO: have to have special handling for this; verify that bet was actually placed in contract
-const placeBet = async((context, betId, userAddress, eventId, outcome, amount) => {
+const placeBet = async((context, userAddress, eventId, outcome, amount) => {
     return exception.try(() => {
+        const betId = 'xxxxxxx'; 
         const bet = {
             id: betId,
             userAddress: userAddress,
             eventId: eventId,
             outcome: outcome,
-            amount: amount
+            amount: ethUnits.convert(amount, 'eth', 'wei')
         };
+
         const data = await(dataAccess.placeBet(bet));
         return { status: 200, content: data }; 
     });
@@ -220,6 +237,7 @@ const getBetTotals = async((context) => {
 module.exports = {
     start, 
 
+    getContractInfo,
     getAcceptedProviders,
     getAllEvents,
     getPendingEvents,

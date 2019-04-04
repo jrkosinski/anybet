@@ -28,7 +28,7 @@ function showEventDetail(evt) {
 function clearCreateForm() {
     $("#event-create-provider-text").val(""); 
     $("#event-create-id-text").val(""); 
-    $("#event-create-minbet-text").val(""); 
+    $("#event-create-minbet-text").val("0.000001"); 
 }
 
 function onEventClick(eventId) {
@@ -63,10 +63,14 @@ function onCreateEventButtonClick() {
     const minBet = Math.abs(parseInt($("#event-create-minbet-text").val()));
 
     api.addEvent(providerId, eventId, minBet, (data, err) => {
-        console.log(data);
+        console.log('addEvent returned: ' + data);
 
         if (data) {
+            hideOverlays(); 
             refreshEvents(); 
+        }
+        else {
+            alert('no data?'); 
         }
     }); 
 }
@@ -82,28 +86,48 @@ function onPlaceBetButtonClick(evt) {
         }
 
         //prepopulate min bet 
-        $("#bet-amount-text").val(_currentEvent.minimumBet); 
+        $("#bet-amount-text").val(_currentEvent.minBetAmount); 
+        $("#bet-amount-text").val("0.000001"); 
     }
 
     showForm("#event-bet-form"); 
 }
 
+function hideOverlays() {
+    hideForm("#event-bet-form"); 
+    hideForm("#event-detail-overlay"); 
+    hideForm("#event-create-overlay"); 
+}
+
 function onConfirmBetButtonClick(eventId) {
-    const betAmount = parseInt($("#bet-amount-text").val()); 
+    const betAmount = parseFloat($("#bet-amount-text").val()); 
+    const betWei = betAmount * 10e18; 
     const outcome = $("#bet-outcome-list").val(); 
     const outcomeText = $("#bet-outcome-list option:selected").text();
 
     //validate min bet 
-    if (betAmount < _currentEvent.minimumBet) {
-        alert('Minimum bet is ' + _currentEvent.minimumBet); 
+    if (betWei < _currentEvent.minBetAmount) {
+        alert('Minimum bet is ' + _currentEvent.minBetAmount); 
     }
     else {
         if (confirm(`You are about to place a bet for ${betAmount} on ${outcomeText}. Do you want to go ahead?`)) {
-            window.contracts.anybet.placeBet(providerId, eventId, outcome, { amount: betAmount }, (data, err) => {
+            
+            /*
+            window.contracts.anybet.getEvent(eventId, (data, err) => {
+                alert(JSON.stringify(data)); 
+            });
+            */
+            const fromAddress = "0x0fF34fCF14571ceD47a94015eaFdB27B9fCB0338"; 
+            window.contracts.anybet.placeBet(eventId, outcome, { from:fromAddress, value: betWei }, (data, err) => {
                 console.log(data);
+                console.log(err);
         
                 if (data) {
-                    refreshEvents(); 
+                    hideOverlays();
+
+                    api.placeBet(eventId, fromAddress, parseInt(outcome), betAmount, (data, err) => {
+                        refreshEvents(); 
+                    });
                 }
             });
         }
@@ -112,8 +136,7 @@ function onConfirmBetButtonClick(eventId) {
 
 
 $(document).ready(() => {
-    hideForm("#event-detail-overlay"); 
-    hideForm("#event-create-overlay"); 
+    hideOverlays();
 
     console.log(Anybet);
     refreshEvents();
@@ -129,7 +152,7 @@ $(document).ready(() => {
 
     $("#event-create-cancel-button").click(() => {
         clearCreateForm();
-        hideForm("#event-create-overlay"); 
+        hideOverlays();
     });
 
     $("#event-cancel-button").click(() => {
@@ -145,11 +168,11 @@ $(document).ready(() => {
     });
 
     $("#close-create-dialog").click(() => {
-        hideForm("#event-create-overlay")
+        hideOverlays();
     });
 
     $("#close-detail-dialog").click(() => {
-        hideForm("#event-detail-overlay")
+        hideOverlays();
     });
 
     $("#show-all-checkbox").prop('checked', _showAll);

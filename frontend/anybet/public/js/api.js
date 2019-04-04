@@ -39,6 +39,10 @@ function execApiCall (url, method, data, callback) {
     $.ajax(url, options);
 }
 
+function getContractInfo(callback) {
+    execApiCall("/contract", "GET", null, callback); 
+}
+
 function getProviders(callback) {
     execApiCall("/providers", "GET", null, callback); 
 }
@@ -65,7 +69,6 @@ function getPendingEvents( callback) {
 }
 
 function getEventDetails(eventId, callback) {
-    alert(eventId);
     execApiCall('/events/' + eventId, 'GET', null, callback); 
 }
 
@@ -77,9 +80,19 @@ function addEvent(providerId, eventId, minBet, callback) {
     }, callback); 
 }
 
+function placeBet(eventId, userAddress, outcome, amount, callback) {
+    execApiCall('/bets', 'POST', {
+        eventId: eventId,
+        userAddress: userAddress, 
+        outcome: outcome,
+        amount: amount
+    }, callback)
+}
+
 
 $(document).ready(function () {
     window.api = {
+        getContractInfo,
         getProviders,
         getEvents,
         getAllEvents,

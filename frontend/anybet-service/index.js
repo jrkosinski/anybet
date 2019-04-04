@@ -77,11 +77,24 @@ function logRequestEnd(callTitle, response) {
     logger.info(callTitle + " returning " + JSON.stringify(response)); 
 }
 
+const addEventOptionsCalls = async(() => {
+    exception.try(() => {
+        const events = await(middleTier.getAllEvents()).content; 
+        if (events) {
+            for (let n=0; n<events.length; n++) {
+                addOptionsCall(app, `/events/${events[n].id}`); 
+            }
+        }
+    });
+}); 
+
+
 function runWebServer (){
     app.use(bodyParser.json());
     app.use(bodyParser());
 
     addOptionsCall(app, '/');
+    addOptionsCall(app, '/contract');
     addOptionsCall(app, '/providers');
     addOptionsCall(app, '/events');
     addOptionsCall(app, '/events/pending');
@@ -98,6 +111,12 @@ function runWebServer (){
             sendFile(res, filename);
         });
     };
+
+    app.get('/contract', async((req, res) => {
+        executeCall('GET /contract', req, res, (context) => {
+            return await(middleTier.getContractInfo(context)); 
+        });
+    }));
 
     //OK
     app.get('/providers', async((req, res) => {
@@ -134,7 +153,9 @@ function runWebServer (){
     //OK
     app.post('/events', async((req, res) => {
         executeCall(`POST /events/`, req, res, (context) => {
-            return await(middleTier.addEvent(context, context.body.providerAddress, context.body.providerEventId, context.body.minimumBet)); 
+            const output = await(middleTier.addEvent(context, context.body.providerAddress, context.body.providerEventId, context.body.minimumBet));
+            addEventOptionsCalls(); 
+            return output; 
         });
     })); 
 
@@ -149,17 +170,18 @@ function runWebServer (){
     
     app.post('/bets', async((req, res) => {
         executeCall(`POST /bets/`, req, res, (context) => {
-            const betId = req.body.betId;
-            const userAddress = req.body.userAddress;
             const eventId = req.body.eventId; 
+            const userAddress = req.body.userAddress;
             const outcome = parseInt(req.body.outcome); 
             const amount = parseInt(req.body.amount); 
 
-            return await(middleTier.placeBet(context, betId, userAddress, eventId, outcome, amount)); 
+            return await(middleTier.placeBet(context, userAddress, eventId, outcome, amount)); 
         });
     }));
 
-    middleTier.start(); 
+    middleTier.start(async(() => {
+        addEventOptionsCalls(); 
+    })); 
 
     const httpPort = 8084; 
     app.listen(httpPort, () => console.log('anybet listening on port ' + httpPort));
