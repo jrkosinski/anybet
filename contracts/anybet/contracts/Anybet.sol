@@ -9,6 +9,7 @@ import "./ProviderInterface.sol";
 contract Anybet is Ownable {
     Event[] public events; 
     Bet[] public bets;
+    address payable houseWallet;
 
     mapping(bytes32 => uint) eventIdToIndex; 
     mapping(address => bytes32[]) internal userToBets;
@@ -28,14 +29,21 @@ contract Anybet is Ownable {
         bytes32 eventId;
         address providerAddress;
         bytes32 providerEventId;
-        string name;
-        uint date; 
         uint minBetAmt;
         ProviderInterface.EventState state;
+        uint8 outcome;
+        uint totalBet;
+        bool finalized;
+    }
+
+    struct ProviderEvent {
+        bytes32 eventId;
+        ProviderInterface.EventState state;
+        string name;
+        uint date; 
         string options;
         uint8 optionCount; 
         uint8 outcome;
-        uint totalBet;
     }
 
     struct Bet {
@@ -44,6 +52,7 @@ contract Anybet is Ownable {
         bytes32 eventId;
         uint amount; 
         uint8 option;
+        bool finalized; 
     }
 
 
@@ -86,7 +95,7 @@ contract Anybet is Ownable {
         return output; 
     }
 
-    function getEvent(bytes32 _eventId) public view returns (
+    function getEventDetails(bytes32 _eventId) public returns (
         bytes32 eventId,
         address providerAddress,
         bytes32 providerEventId,
@@ -100,8 +109,10 @@ contract Anybet is Ownable {
     ) {
         uint index = eventIdToIndex[_eventId]; 
         if (events.length > 0 && index > 0) {
-            Event storage evt = events[index-1]; 
-            return (evt.eventId, evt.providerAddress, evt.providerEventId, evt.name, evt.date, evt.minBetAmt, evt.state, evt.options, evt.optionCount, evt.outcome); 
+            Event storage localEvent = events[index-1]; 
+
+            ProviderEvent memory providerEvent = _refreshEventFromProvider(localEvent); 
+            return (localEvent.eventId, localEvent.providerAddress, localEvent.providerEventId, providerEvent.name, providerEvent.date, localEvent.minBetAmt, localEvent.state, providerEvent.options, providerEvent.optionCount, providerEvent.outcome); 
         }
         
         return (0, address(0), 0, "", 0, 0, ProviderInterface.EventState.Unknown, "", 0, 0);
@@ -125,7 +136,7 @@ contract Anybet is Ownable {
 
         //refresh event from oracle provider
         Event storage evt = events[_getEventIndex(_eventId)]; 
-        _refreshEventFromProvider(evt); 
+        ProviderEvent memory providerEvent = _refreshEventFromProvider(evt); 
 
         //require that event is pending (bettable)
         require(evt.state == ProviderInterface.EventState.Pending, "event is not bettable"); 
@@ -148,12 +159,12 @@ contract Anybet is Ownable {
         require(!userHasBet, "user already has a running bet for this event");
 
         //ensure that outcome is within proper range
-        require(_outcome >= 0 && _outcome < evt.optionCount, "invalid chosen outcome - not within valid range of options");
+        require(_outcome >= 0 && _outcome < providerEvent.optionCount, "invalid chosen outcome - not within valid range of options");
 
         //place the bet 
         uint[] storage betIndexes = eventToBets[_eventId]; 
         bytes32 betId = _generateBetId(_eventId, msg.sender); 
-        uint betIndex = bets.push(Bet(betId, msg.sender, _eventId, msg.value, _outcome))-1; 
+        uint betIndex = bets.push(Bet(betId, msg.sender, _eventId, msg.value, _outcome, false))-1; 
         betIndexes.push(betIndex);
         userBets.push(_eventId); 
         output = true;
@@ -184,17 +195,81 @@ contract Anybet is Ownable {
         return output; 
     }
 
-    //if state or outcome has changed, refresh from provider 
-    function refreshEventFromProvider(bytes32 _eventId) public returns (bool) {
-        require(_eventExists(_eventId), "Event not found"); 
-
-        uint eventIndex = _getEventIndex(_eventId); 
-        return _refreshEventFromProvider(events[eventIndex]); 
-    }
-
     //handles payouts 
-    function finalizeBet(bytes32 _eventId) public returns (bool) {
-        
+    function handlePayoutsForEvent(bytes32 _eventId) public returns (bool) {
+        //get event, ensure that it exists
+        uint index = eventIdToIndex[_eventId]; 
+
+        if (events.length > 0 && index > 0) {
+            Event storage localEvent = events[index-1]; 
+
+            //refresh event from provider 
+            _refreshEventFromProvider(localEvent);
+
+            //make sure that event is in a state to be finalized 
+            if (!localEvent.finalized) {
+
+                if (localEvent.state == ProviderInterface.EventState.Cancelled) {
+                    //if cancelled, return all bets 
+                    uint[] storage allBets = eventToBets[_eventId]; 
+                    for (uint n=0; n<allBets.length; n++) {
+                        Bet storage bet = bets[allBets[n]]; 
+
+                        if (!bet.finalized) {
+                            //return the amount bet to the user 
+                            bet.finalized = true;
+                        }
+                    }
+
+                    //event is finalized 
+                    localEvent.finalized = true;
+                }
+                else if (localEvent.state == ProviderInterface.EventState.Completed) {
+
+                    //if completed, handle payouts to each user who won 
+                    uint[] storage allBets = eventToBets[_eventId]; 
+                    
+                    //calculate total amount bet on winning option
+                    uint payToHouse = 0; 
+                    uint totalBetForEvent = localEvent.totalBet;
+                    uint totalWinningBet = _getTotalBetOnEventOption(_eventId, localEvent.outcome);
+                    uint totalLosingBet = (totalBetForEvent - totalWinningBet); 
+
+                    for (uint n=0; n<allBets.length; n++) {
+                        Bet storage bet = bets[allBets[n]]; 
+
+                        if (!bet.finalized) {
+                            bool userIsWinner = (localEvent.outcome == bet.option); 
+
+                            if (userIsWinner) {
+                                //pay the user a winner's share 
+                                address payable userWallet = address(uint160(address(bet.user)));
+                                if (userWallet.send(bet.amount)) {
+                                    bet.finalized = true;
+                                }
+                            }
+                        }
+                    }
+
+                    //now pay the remainder house 
+                    if (payToHouse > 0) {
+                        houseWallet.transfer(payToHouse); 
+                    }
+
+                    //event is finalized 
+                    localEvent.finalized = true;
+                }
+                else {
+                    require(false, "Event is not in a state to be finalized"); 
+                }
+            }
+            else {
+                require(false, "Event has already been finalized"); 
+            }
+        }
+        else {
+            require(false, "Specified event was not found"); 
+        }
     }
 
 
@@ -203,19 +278,11 @@ contract Anybet is Ownable {
     function addEvent(address _providerAddress, bytes32 _eventId, uint _minBetAmt) external onlyOwner returns (bytes32) {
         //get event from provider
         
-        ProviderInterface provider = ProviderInterface(_providerAddress);
         bytes32 newId = 0;
-        
-        bytes32 eventId;
-        string memory name;
-        string memory options; 
-        uint8 optionCount; 
-        ProviderInterface.EventState state;
-        uint date;
 
-        (eventId, name, state, date, options, optionCount,) = provider.getEvent(_eventId);
+        ProviderEvent memory providerEvent = _getEventFromProvider(_providerAddress, _eventId); 
 
-        if (state == ProviderInterface.EventState.Pending) {
+        if (providerEvent.state == ProviderInterface.EventState.Pending) {
             //generate new unique event index 
             newId = getEventId(_providerAddress, _eventId); 
 
@@ -226,14 +293,11 @@ contract Anybet is Ownable {
                     newId,
                     _providerAddress, 
                     _eventId,
-                    name, 
-                    date,
                     (_minBetAmt < globalMinBetAmt) ? globalMinBetAmt : _minBetAmt,
-                    ProviderInterface.EventState.Pending,
-                    options, 
-                    optionCount,
+                    providerEvent.state, 
                     0, 
-                    0
+                    0, 
+                    false
                 )); 
 
                 //add event to index mapping
@@ -244,6 +308,13 @@ contract Anybet is Ownable {
         }
 
         return newId;
+    }
+
+
+    // -- ADMIN FUNCTIONS -- 
+
+    function setHouseWallet(address _address) public onlyOwner {
+        houseWallet = address(uint160(address(_address)));
     }
 
 
@@ -258,11 +329,34 @@ contract Anybet is Ownable {
     }
 
     function _getEmptyBet() private pure returns (Bet memory) {
-        return Bet(0, address(0), 0, 0, 0); 
+        return Bet(0, address(0), 0, 0, 0, false); 
     }
 
-    function _refreshEventFromProvider(Event storage _event) private returns (bool) {
-        bool output = false; 
+    function _getEventFromProvider(address providerAddress, bytes32 eventId) private view returns (ProviderEvent memory) {
+        ProviderInterface provider = ProviderInterface(providerAddress);
+        ProviderEvent memory output; 
+
+        string memory name;
+        ProviderInterface.EventState state;
+        uint date;
+        string memory options;
+        uint8 optionCount;
+        uint8 outcome;
+
+        (,name,state,date,options,optionCount,outcome) = provider.getEvent(eventId); 
+        
+        output.name = name;
+        output.state = state;
+        output.date = date;
+        output.options = options;
+        output.outcome = outcome; 
+        output.optionCount = optionCount; 
+
+        return output; 
+    }
+
+    function _refreshEventFromProvider(Event storage _event) private returns (ProviderEvent memory) {
+        ProviderEvent memory output = _getEventFromProvider(_event.providerAddress, _event.providerEventId); 
 
         //get event from oracle 
         ProviderInterface provider = ProviderInterface(_event.providerAddress);
@@ -307,13 +401,11 @@ contract Anybet is Ownable {
         return optionIdToBetAmount[optionId]; 
     }
 
-    function _calculateWinnings(bytes32 _eventId, address _user) private view returns (uint) {
+    //NO LONGER USER 
+    function _calculateWinnings(Event storage evt, bytes32 _eventId, address _user) private view returns (uint) {
         
         //ensure valid event id 
         require(_eventExists(_eventId), "event not found"); 
-
-        //get the event 
-        Event storage evt = events[_getEventIndex(_eventId)];
 
         //if event was cancelled, refund all original bet amount
         if (evt.state == ProviderInterface.EventState.Cancelled) {  
@@ -325,33 +417,34 @@ contract Anybet is Ownable {
         }
         else {
             //require that event is finished
-            require(evt.state == ProviderInterface.EventState.Completed, "event not yet completed");
+            if (evt.state == ProviderInterface.EventState.Completed) {
 
-            //get the user's bet
-            Bet storage userBet = _getUserBetForEvent(_eventId, _user);
+                //get the user's bet
+                Bet storage userBet = _getUserBetForEvent(_eventId, _user);
 
-            if (userBet.user == _user) {
+                if (userBet.user == _user) {
 
-                bool userIsWinner = (evt.outcome == userBet.option); 
+                    bool userIsWinner = (evt.outcome == userBet.option); 
 
-                //if user lost, he gets nothing back 
-                if (!userIsWinner) {
-                    return 0;
-                }
-                else {
-                    //get stats 
-                    uint totalBetForEvent = evt.totalBet;
-                    uint totalWinningBet = _getTotalBetOnEventOption(_eventId, evt.outcome);
-                    uint totalLosingBet = (totalBetForEvent - totalWinningBet); 
+                    //if user lost, he gets nothing back 
+                    if (!userIsWinner) {
+                        return 0;
+                    }
+                    else {
+                        //get stats 
+                        uint totalBetForEvent = evt.totalBet;
+                        uint totalWinningBet = _getTotalBetOnEventOption(_eventId, evt.outcome);
+                        uint totalLosingBet = (totalBetForEvent - totalWinningBet); 
 
-                    //calculate winnings 
-                    uint winnings = userBet.amount; 
-                    winnings += ((winnings/totalWinningBet) * totalLosingBet); 
+                        //calculate winnings 
+                        uint winnings = userBet.amount; 
+                        winnings += ((winnings/totalWinningBet) * totalLosingBet); 
 
-                    //return winnings minus house cut 
-                    return winnings - (winnings/100) * houseCutPercentage; 
-                }
-            }            
+                        //return winnings minus house cut 
+                        return winnings - (winnings/100) * houseCutPercentage; 
+                    }
+                }        
+            }    
         }
 
         return 0;

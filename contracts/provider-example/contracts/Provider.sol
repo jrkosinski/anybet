@@ -164,8 +164,11 @@ contract Provider is ProviderInterface, Ownable {
     }
 
     function addTestData() public onlyOwner {
-        addEvent("will Trump remain president?", DateLib.DateTime(2020, 1, 30, 0, 0, 0, 0, 0).toUnixTimestamp(), "yes|no", 2);
-        addEvent("who will win the trubador contest?", DateLib.DateTime(2020, 1, 30, 0, 0, 0, 0, 0).toUnixTimestamp(), "gooki|pookino", 3);
+        addEvent("will Donald Trump get re-elected as president of the US?", DateLib.DateTime(2020, 1, 30, 0, 0, 0, 0, 0).toUnixTimestamp(), "yes|no", 2);
+        addEvent("Shamus vs. Terwilliger November 2019", DateLib.DateTime(2020, 1, 30, 0, 0, 0, 0, 0).toUnixTimestamp(), "Shamus|Terwilliger|tie", 3);
+        addEvent("Rocky vs. Drago 1984", DateLib.DateTime(1984, 1, 30, 0, 0, 0, 0, 0).toUnixTimestamp(), "Rocky|Drago|tie", 3); 
+        addEvent("Super Bowl Winner 2020", DateLib.DateTime(2020, 2, 24, 0, 0, 0, 0, 0).toUnixTimestamp(), "Broncos|Patriots|Cypriots|Hoosiers|Rasputins|Bullrushers|none", 7); 
+        addEvent("will the world end in 2024?", DateLib.DateTime(2024, 1, 1, 0, 0, 0, 0, 0).toUnixTimestamp(), "yes|no", 2);
     }
 
     function getAddress() public view returns (address) {
